@@ -13,11 +13,11 @@ Welcome to the Monopoly Project! This project is a digital implementation of the
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/yourusername/monopoly-project.git
+    git https://github.com/Shadowjumper3000/DSProject-Monopoly
     ```
 2. Navigate to the project directory:
     ```sh
-    cd monopoly-project
+    cd DSProject-Monopoly
     ```
 3. Install venv:
     ```sh
