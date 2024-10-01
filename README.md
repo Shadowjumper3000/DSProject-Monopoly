@@ -36,7 +36,6 @@ Welcome to the Monopoly Project! This project is a digital implementation of the
 
 Start the game with:
 ```sh
-npm start
 ```
 
 ## Contributing
