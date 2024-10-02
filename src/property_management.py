@@ -1,3 +1,9 @@
+"""
+property_management.py
+
+This module contains the Property class, which represents a property in the Monopoly game.
+"""
+
 from utils import LinkedList, Node
 
 class Property:
