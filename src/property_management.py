@@ -101,7 +101,7 @@ class Property:
         return -1
 
 
-def initializeProperties():
+def initialize_properties():
     """
     Initializes the properties for the Monopoly game.
 
