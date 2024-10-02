@@ -2,8 +2,9 @@ from utils import LinkedList, Node
 
 class Property:
     """
-    Property Class.
-    Attributes:
+    A class to represent a property in the Monopoly game.
+
+    Attributes
     ----------
     name : str
         The name of the property.
@@ -11,26 +12,29 @@ class Property:
         The cost to purchase the property.
     rent : int
         The rent charged when another player lands on the property.
-    street_group : str
-        The group or color set to which the property belongs.
+    street_group : int
+        The group to which the property belongs.
     owner : str or None
-        The owner of the property. None if the property is not owned.
+        The owner of the property.
     mortgaged : bool
-        Indicates whether the property is mortgaged.
-    Methods:
-    -------
-    return_rent():
-        Returns the rent of the property.
-    return_cost():
-        Returns the cost of the property.
-    return_owner():
-        Returns the owner of the property.
-    mortgage_property():
-        Mortgages the property and returns half the cost. Returns -1 if already mortgaged.
-    change_owner(new_owner):
-        Changes the owner of the property.
+        Indicates if the property is mortgaged.
     """
+
     def __init__(self, name, cost, rent, street_group):
+        """
+        Constructs all the necessary attributes for the Property object.
+
+        Parameters
+        ----------
+        name : str
+            The name of the property.
+        cost : int
+            The cost to purchase the property.
+        rent : int
+            The rent charged when another player lands on the property.
+        street_group : int
+            The group to which the property belongs.
+        """
         self.name = name
         self.cost = cost
         self.rent = rent
@@ -39,18 +43,58 @@ class Property:
         self.mortgaged = False
 
     def return_rent(self):
+        """
+        Returns the rent of the property.
+
+        Returns
+        -------
+        int
+            The rent of the property.
+        """
         return self.rent
 
     def return_cost(self):
+        """
+        Returns the cost of the property.
+
+        Returns
+        -------
+        int
+            The cost of the property.
+        """
         return self.cost
 
     def return_owner(self):
+        """
+        Returns the owner of the property.
+
+        Returns
+        -------
+        str or None
+            The owner of the property.
+        """
         return self.owner
 
     def change_owner(self, new_owner):
+        """
+        Changes the owner of the property.
+
+        Parameters
+        ----------
+        new_owner : str
+            The new owner of the property.
+        """
         self.owner = new_owner
 
     def mortgage_property(self):
+        """
+        Mortgages the property if it is not already mortgaged.
+
+        Returns
+        -------
+        int
+            Half the cost of the property if it is not mortgaged, otherwise -1.
+        """
         if not self.mortgaged:
             self.mortgaged = True
             return self.cost // 2
@@ -58,6 +102,14 @@ class Property:
 
 
 def initializeProperties():
+    """
+    Initializes the properties for the Monopoly game.
+
+    Returns
+    -------
+    LinkedList
+        A linked list containing all the properties.
+    """
     properties = LinkedList()
     properties.append(Node(Property("Mediterranean Avenue", 60, 2, 1)))
     properties.append(Node(Property("Baltic Avenue", 60, 4, 1)))
