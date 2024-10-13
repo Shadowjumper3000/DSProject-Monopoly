@@ -4,8 +4,6 @@ property_management.py
 This module contains the Property class.
 """
 
-from utils import LinkedList, Node
-
 class Property:
     """
     A class to represent a property in the Monopoly game.
@@ -25,6 +23,7 @@ class Property:
     mortgaged : bool
         Indicates if the property is mortgaged.
     """
+
 
     def __init__(self, name, cost, rent, street_group):
         """
@@ -48,6 +47,7 @@ class Property:
         self.owner = None
         self.mortgaged = False
 
+
     def return_rent(self):
         """
         Returns the rent of the property.
@@ -58,6 +58,7 @@ class Property:
             The rent of the property.
         """
         return self.rent
+
 
     def return_cost(self):
         """
@@ -70,6 +71,7 @@ class Property:
         """
         return self.cost
 
+
     def return_owner(self):
         """
         Returns the owner of the property.
@@ -81,6 +83,7 @@ class Property:
         """
         return self.owner
 
+
     def change_owner(self, new_owner):
         """
         Changes the owner of the property.
@@ -91,6 +94,7 @@ class Property:
             The new owner of the property.
         """
         self.owner = new_owner
+
 
     def mortgage_property(self):
         """
@@ -107,36 +111,51 @@ class Property:
         return -1
 
 
+    def unmortgage_property(self):
+        """
+        Unmortgages the property if it is mortgaged.
+        
+        Returns
+        -------
+        int
+            The cost to unmortgage the property if it is mortgaged, otherwise -1.
+        """
+        if self.mortgaged:
+            self.mortgaged = False
+            return self.cost // 2
+        return -1
+
+
 def initialize_properties():
     """
     Initializes the properties for the Monopoly game.
 
     Returns
     -------
-    LinkedList
-        A linked list containing all the properties.
+    list
+        A list containing all the properties.
     """
-    properties = LinkedList()
-    properties.append(Node(Property("Mediterranean Avenue", 60, 2, 1)))
-    properties.append(Node(Property("Baltic Avenue", 60, 4, 1)))
-    properties.append(Node(Property("Oriental Avenue", 100, 6, 2)))
-    properties.append(Node(Property("Vermont Avenue", 100, 6, 2)))
-    properties.append(Node(Property("Connecticut Avenue", 120, 8, 2)))
-    properties.append(Node(Property("St. Charles Place", 140, 10, 3)))
-    properties.append(Node(Property("States Avenue", 140, 10, 3)))
-    properties.append(Node(Property("Virginia Avenue", 160, 12, 3)))
-    properties.append(Node(Property("St. James Place", 180, 14, 4)))
-    properties.append(Node(Property("Tennessee Avenue", 180, 14, 4)))
-    properties.append(Node(Property("New York Avenue", 200, 16, 4)))
-    properties.append(Node(Property("Kentucky Avenue", 220, 18, 5)))
-    properties.append(Node(Property("Indiana Avenue", 220, 18, 5)))
-    properties.append(Node(Property("Illinois Avenue", 240, 20, 5)))
-    properties.append(Node(Property("Atlantic Avenue", 260, 22, 6)))
-    properties.append(Node(Property("Ventnor Avenue", 260, 22, 6)))
-    properties.append(Node(Property("Marvin Gardens", 280, 24, 6)))
-    properties.append(Node(Property("Pacific Avenue", 300, 26, 7)))
-    properties.append(Node(Property("North Carolina Avenue", 300, 26, 7)))
-    properties.append(Node(Property("Pennsylvania Avenue", 320, 28, 7)))
-    properties.append(Node(Property("Park Place", 350, 35, 8)))
-    properties.append(Node(Property("Boardwalk", 400, 50, 8)))
+    properties = []
+    properties.append(Property("Mediterranean Avenue", 60, 2, 1))
+    properties.append(Property("Baltic Avenue", 60, 4, 1))
+    properties.append(Property("Oriental Avenue", 100, 6, 2))
+    properties.append(Property("Vermont Avenue", 100, 6, 2))
+    properties.append(Property("Connecticut Avenue", 120, 8, 2))
+    properties.append(Property("St. Charles Place", 140, 10, 3))
+    properties.append(Property("States Avenue", 140, 10, 3))
+    properties.append(Property("Virginia Avenue", 160, 12, 3))
+    properties.append(Property("St. James Place", 180, 14, 4))
+    properties.append(Property("Tennessee Avenue", 180, 14, 4))
+    properties.append(Property("New York Avenue", 200, 16, 4))
+    properties.append(Property("Kentucky Avenue", 220, 18, 5))
+    properties.append(Property("Indiana Avenue", 220, 18, 5))
+    properties.append(Property("Illinois Avenue", 240, 20, 5))
+    properties.append(Property("Atlantic Avenue", 260, 22, 6))
+    properties.append(Property("Ventnor Avenue", 260, 22, 6))
+    properties.append(Property("Marvin Gardens", 280, 24, 6))
+    properties.append(Property("Pacific Avenue", 300, 26, 7))
+    properties.append(Property("North Carolina Avenue", 300, 26, 7))
+    properties.append(Property("Pennsylvania Avenue", 320, 28, 7))
+    properties.append(Property("Park Place", 350, 35, 8))
+    properties.append(Property("Boardwalk", 400, 50, 8))
     return properties
