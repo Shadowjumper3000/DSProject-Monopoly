@@ -5,7 +5,7 @@ This module contains the Property class.
 """
 
 
-class Property:
+class Estate:
     """
     A class to represent a property in the Monopoly game.
 
@@ -97,26 +97,26 @@ def initialize_properties():
         A list containing all the properties.
     """
     properties = []
-    properties.append(Property("Mediterranean Avenue", 60, 2, 1))
-    properties.append(Property("Baltic Avenue", 60, 4, 1))
-    properties.append(Property("Oriental Avenue", 100, 6, 2))
-    properties.append(Property("Vermont Avenue", 100, 6, 2))
-    properties.append(Property("Connecticut Avenue", 120, 8, 2))
-    properties.append(Property("St. Charles Place", 140, 10, 3))
-    properties.append(Property("States Avenue", 140, 10, 3))
-    properties.append(Property("Virginia Avenue", 160, 12, 3))
-    properties.append(Property("St. James Place", 180, 14, 4))
-    properties.append(Property("Tennessee Avenue", 180, 14, 4))
-    properties.append(Property("New York Avenue", 200, 16, 4))
-    properties.append(Property("Kentucky Avenue", 220, 18, 5))
-    properties.append(Property("Indiana Avenue", 220, 18, 5))
-    properties.append(Property("Illinois Avenue", 240, 20, 5))
-    properties.append(Property("Atlantic Avenue", 260, 22, 6))
-    properties.append(Property("Ventnor Avenue", 260, 22, 6))
-    properties.append(Property("Marvin Gardens", 280, 24, 6))
-    properties.append(Property("Pacific Avenue", 300, 26, 7))
-    properties.append(Property("North Carolina Avenue", 300, 26, 7))
-    properties.append(Property("Pennsylvania Avenue", 320, 28, 7))
-    properties.append(Property("Park Place", 350, 35, 8))
-    properties.append(Property("Boardwalk", 400, 50, 8))
+    properties.append(Estate("Mediterranean Avenue", 60, 2, 1))
+    properties.append(Estate("Baltic Avenue", 60, 4, 1))
+    properties.append(Estate("Oriental Avenue", 100, 6, 2))
+    properties.append(Estate("Vermont Avenue", 100, 6, 2))
+    properties.append(Estate("Connecticut Avenue", 120, 8, 2))
+    properties.append(Estate("St. Charles Place", 140, 10, 3))
+    properties.append(Estate("States Avenue", 140, 10, 3))
+    properties.append(Estate("Virginia Avenue", 160, 12, 3))
+    properties.append(Estate("St. James Place", 180, 14, 4))
+    properties.append(Estate("Tennessee Avenue", 180, 14, 4))
+    properties.append(Estate("New York Avenue", 200, 16, 4))
+    properties.append(Estate("Kentucky Avenue", 220, 18, 5))
+    properties.append(Estate("Indiana Avenue", 220, 18, 5))
+    properties.append(Estate("Illinois Avenue", 240, 20, 5))
+    properties.append(Estate("Atlantic Avenue", 260, 22, 6))
+    properties.append(Estate("Ventnor Avenue", 260, 22, 6))
+    properties.append(Estate("Marvin Gardens", 280, 24, 6))
+    properties.append(Estate("Pacific Avenue", 300, 26, 7))
+    properties.append(Estate("North Carolina Avenue", 300, 26, 7))
+    properties.append(Estate("Pennsylvania Avenue", 320, 28, 7))
+    properties.append(Estate("Park Place", 350, 35, 8))
+    properties.append(Estate("Boardwalk", 400, 50, 8))
     return properties
