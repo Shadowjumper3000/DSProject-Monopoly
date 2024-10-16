@@ -15,10 +15,10 @@ class Player:
         The players id (player 1, 2, etc.)
     name : str
         The name of the player
-    money: int or float?
+    money: int
         The amount of money a player currently has.
-    properties: arr
-        The properties the player owns
+    estates: arr
+        The estates the player owns
     in_jail : bool
         Is the player currently in jail
     jail_free_cards : int
@@ -47,33 +47,14 @@ class Player:
         self.in_jail = False
         self.jail_free_cards = 0
 
-    def move(self, steps):
+    def buy_estate(self, estate):
         """
-        Allows the player to move around the board
+        Provides the player the ability to buy a estate if the can afford it.
 
         Parameters
         ----------
-        steps : int
-            The number of places the player is going to move. Checks if player passes go.
-        """
-        self.position = (self.position + steps) % 40
-        if self.position + steps >= 40:
-            self.pass_go()
-
-    def pass_go(self):
-        """
-        Provides player with money for passing go
-        """
-        self.money += 200
-
-    def buy_propert(self, estate):
-        """
-        Provides the player the ability to buy a property if the can afford it.
-
-        Parameters
-        ----------
-        property : property
-            The property object which the player can buy.
+        estate : estate
+            The estate object which the player can buy.
         """
         if self.money >= estate.cost:
             self.money -= estate.cost
@@ -82,43 +63,43 @@ class Player:
         else:
             print(f"{self.name} doesn't have enough money to buy {estate.name}")
 
-    def player_mortgage_property(self, estate):
+    def player_mortgage_estate(self, estate):
         """
-        Allows the player to mortgage a property
+        Allows the player to mortgage an estate
 
         Parameters
         ----------
-        property: Property
-            The property which the player wants to mortgage
+        estate: estate
+            The estate which the player wants to mortgage
         """
-        if property in self.estates:
-            mortgage = estate.mortage_property()
-            if mortgage == -1:
-                print("Unable to mortgage property, because it has already been mortgaged")
+        if estate in self.estates:
+            mortgage = estate.mortage_estate()
+            if mortgage is None:
+                print("Unable to mortgage estate, because it has already been mortgaged")
             else:
                 self.money += mortgage
-                print(f"Property has been mortgaged. {mortgage} has been added to you money")
+                print(f"estate has been mortgaged. {mortgage} has been added to you money")
         else:
-            print(f"Unabel to mortgage propert, {self.name} does not own this property")
+            print(f"Unable to mortgage estate, {self.name} does not own this estate")
 
-    def player_unmortgage_property(self, estate):
+    def player_unmortgage_estate(self, estate):
         """
-        Allows the player to unmortgage a property
+        Allows the player to unmortgage a estate
 
         Parameters
         ----------
-        property: Property
-            The property which the player wants to unmortgage
+        estate: estate
+            The estate which the player wants to unmortgage
         """
-        if property in self.estates:
-            mortgage = estate.unmortage_property()
-            if mortgage == -1:
-                print("Unable to unmortgage property, because it has not been mortgaged")
+        if estate in self.estates:
+            mortgage = estate.unmortage_estate()
+            if mortgage is None:
+                print("Unable to unmortgage estate, because it has not been mortgaged")
             else:
                 self.money -= mortgage
-                print(f"Property has been unmortgaged. {mortgage} has been deducted from you money")
+                print(f"estate has been unmortgaged. {mortgage} has been deducted from you money")
         else:
-            print(f"Unable to umortgage property, {self.name} does not own this property")
+            print(f"Unable to umortgage estate, {self.name} does not own this estate")
 
     def pay_rent(self, rent_amount, owner):
         """
@@ -129,7 +110,7 @@ class Player:
         rent_amount: int
             The amount of rent the player must pay
         owner: 
-            The player who owns the property and collects the rent
+            The player who owns the estate and collects the rent
         """
         if self.money >= rent_amount:
             self.money -= rent_amount
@@ -168,6 +149,33 @@ class Player:
         self.money = 0
         self.estates.clear()
         print(f"{self.name} has declared bankrupcty!")
+
+    def sell_estate(self, estate, buyer_player, estate_cost):
+        """
+        Allows the player to sell estates with another player
+
+        Parameters
+        ----------
+        estate: estate
+            The estate the player wants to sell
+        buyer_player: Player
+            The player the player wants to sell with
+        estate_cost: int
+            The cost of the estate
+        """
+        if buyer_player.money < estate_cost:
+            print(f"{buyer_player.name} does not have enough money to buy {estate.name}")
+            return -1
+        if estate in self.estates:
+            self.estates.remove(estate)
+            buyer_player.estates.append(estate)
+            buyer_player.money -= estate_cost
+            self.money += estate_cost
+            print(f"{self.name} has sold {estate.name} to {buyer_player.name} for {estate.cost}")
+        else:
+            print(f"{self.name} does not own {estate.name}")
+            return -1
+        return 0
 
 
 def initialize_player(player_num, player_name):
