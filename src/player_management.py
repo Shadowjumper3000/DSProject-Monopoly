@@ -170,7 +170,7 @@ class Player:
         print(f"{self.name} has declared bankrupcty!")
 
 
-def initialize_player(player_num):
+def initialize_player(player_num, player_name):
     """
     Function to create a new player
 
@@ -178,24 +178,29 @@ def initialize_player(player_num):
     ----------
     player_num : int
         If players are added in order this is the position in which the player has been added
+    player_name : str
+        The name of the player
 
     Returns
     -------
     new_player : Player
         An instance of the Player class
     """
-
-    username = input(f"Player {player_num}, Please enter your username: ")
     new_player = Player(
-        player_id = player_num,
-        name = username
+        player_id=player_num,
+        name=player_name
     )
     return new_player
 
 
-def initialize_players():
+def initialize_players(player_names):
     """
     Function to initialise the players of the Monopoly game.
+
+    Parameters
+    ----------
+    player_names : list
+        A list of player names
 
     Returns
     -------
@@ -203,18 +208,12 @@ def initialize_players():
         A list containing all the players
     """
     players = []
-    while True:
-        try:
-            num_players = int(input("Enter the number of players who will be playing(2-5): "))
+    num_players = len(player_names)
 
-            if 2 <= num_players <= 5:
-                print("Initialising the game with 3 players...")
-                break
-            print("The number must be between 2 and 5. Please try again.")
+    if 2 <= num_players <= 5:
+        for i, name in enumerate(player_names, start=1):
+            players.append(initialize_player(i, name))
+    else:
+        raise ValueError("The number of players must be between 2 and 5.")
 
-        except ValueError:
-            print("Invalid input. Please enter a valid integer.")
-
-    for i in len(num_players):
-        players.append(initialize_player(i))
     return players
