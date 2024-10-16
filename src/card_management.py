@@ -4,6 +4,7 @@ card_management.py
 This module contains the Card class.
 """
 
+
 class Card:
     """
     A class to represent a card in the Monopoly game.
@@ -57,6 +58,7 @@ class Card:
         """
         return self.description
 
+
 def initialize_chance_cards():
     """
     Initializes the Chance cards.
@@ -68,12 +70,17 @@ def initialize_chance_cards():
     """
     chance_cards = [
         Card("Chance Card", "Advance to Go. Collect $200.", 200),
-        Card("Chance Card", "Advance to Illinois Avenue. If you pass Go, collect $200.", 0),
-        Card("Chance Card", "Advance to St. Charles Place. If you pass Go, collect $200.", 0),
-        Card("Chance Card", """Advance to nearest Utility. If unowned, you may buy it from the Bank. 
-             If owned, throw dice and pay owner a total ten times the amount thrown.""", 0)
+        Card("Chance Card", """Advance to Illinois Avenue. 
+             If you pass Go, collect $200.""", 0),
+        Card("Chance Card", """Advance to St. Charles Place. 
+             If you pass Go, collect $200.""", 0),
+        Card("Chance Card", """Advance to nearest Utility. 
+             If unowned, you may buy it from the Bank. 
+             If owned, throw dice and pay owner a total 
+             ten times the amount thrown.""", 0)
     ]
     return chance_cards
+
 
 def initialize_community_chest_cards():
     """

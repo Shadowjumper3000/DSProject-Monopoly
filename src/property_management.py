@@ -4,6 +4,7 @@ property_management.py
 This module contains the Property class.
 """
 
+
 class Property:
     """
     A class to represent a property in the Monopoly game.
@@ -23,7 +24,6 @@ class Property:
     mortgaged : bool
         Indicates if the property is mortgaged.
     """
-
 
     def __init__(self, name, cost, rent, street_group):
         """
@@ -47,43 +47,6 @@ class Property:
         self.owner = None
         self.mortgaged = False
 
-
-    def return_rent(self):
-        """
-        Returns the rent of the property.
-
-        Returns
-        -------
-        int
-            The rent of the property.
-        """
-        return self.rent
-
-
-    def return_cost(self):
-        """
-        Returns the cost of the property.
-
-        Returns
-        -------
-        int
-            The cost of the property.
-        """
-        return self.cost
-
-
-    def return_owner(self):
-        """
-        Returns the owner of the property.
-
-        Returns
-        -------
-        str or None
-            The owner of the property.
-        """
-        return self.owner
-
-
     def change_owner(self, new_owner):
         """
         Changes the owner of the property.
@@ -94,7 +57,6 @@ class Property:
             The new owner of the property.
         """
         self.owner = new_owner
-
 
     def mortgage_property(self):
         """
@@ -110,11 +72,10 @@ class Property:
             return self.cost // 2
         return -1
 
-
     def unmortgage_property(self):
         """
         Unmortgages the property if it is mortgaged.
-        
+
         Returns
         -------
         int
