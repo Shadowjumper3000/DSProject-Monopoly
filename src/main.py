@@ -3,30 +3,56 @@ main.py
 
 This is the main file for the project and will contain Game logic.
 """
+import os
 import random
 
 import player_management
 import estate_management
-import os
 
 
 class Game:
+    """
+    Class representing the Monopoly game.
+    """
+
     def __init__(self):
+        """
+        Initialize the game with players, estates, and the current player index.
+        """
         self.players = []
         self.estates = estate_management.initialize_estates()
         self.current_player_index = 0
 
     def add_player(self, name):
+        """
+        Add a player to the game.
+
+        Args:
+            name (str): The name of the player.
+        """
         player_id = len(self.players) + 1
         player = player_management.Player(player_id, name)
         self.players.append(player)
 
     def roll_dice(self):
+        """
+        Roll two dice and return their sum.
+
+        Returns:
+            int: The sum of the two dice.
+        """
         d1, d2 = random.randint(1, 6), random.randint(1, 6)
         print(f"You rolled: {d1} and {d2} for a total of {d1 + d2}")
         return d1 + d2
 
     def move_player(self, player, steps):
+        """
+        Move a player by a given number of steps.
+
+        Args:
+            player (Player): The player to move.
+            steps (int): The number of steps to move the player.
+        """
         player.position = (player.position + steps) % len(self.estates)
         if player.position + steps >= len(self.estates):
             player.money += 200
@@ -49,6 +75,9 @@ class Game:
             player.in_jail = True
 
     def play_turn(self):
+        """
+        Play a turn for the current player.
+        """
         os.system('cls' if os.name == 'nt' else 'clear')
         player = self.players[self.current_player_index]
         print("-" * 20)
@@ -63,7 +92,8 @@ class Game:
             for estate in player.estates:
                 status = "(Mortgaged)" if estate.mortgaged else ""
                 print(f"  - {estate.name} {status}")
-            action = input(f"Do you want to (B)uy {self.estates[player.position].name} for {self.estates[player.position].cost}, (T)rade, or (M)ortgage a property? (Enter to skip): ").upper()
+            action = input(
+                f"Do you want to (B)uy {self.estates[player.position].name} for {self.estates[player.position].cost}, (T)rade, or (M)ortgage a property? (Enter to skip): ").upper()
             if action == 'B':
                 player.buy_estate(self.estates[player.position])
             elif action == 'T':
