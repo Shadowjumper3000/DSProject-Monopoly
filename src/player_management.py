@@ -56,12 +56,21 @@ class Player:
         estate : estate
             The estate object which the player can buy.
         """
+        if estate.street_group in range(11, 17) or estate.street_group == 0:
+            print(f"{estate.name} is not for sale")
+            return
+        if estate.owner is not None:
+            print(f"{estate.name} is already owned by {estate.owner}")
+            return
         if self.money >= estate.cost:
             self.money -= estate.cost
             self.estates.append(estate)
+            estate.change_owner(self.name)
             print(f"{self.name} has bought {estate.name}")
+            return
         else:
             print(f"{self.name} doesn't have enough money to buy {estate.name}")
+            return
 
     def player_mortgage_estate(self, estate):
         """
@@ -176,52 +185,3 @@ class Player:
             print(f"{self.name} does not own {estate.name}")
             return -1
         return 0
-
-
-def initialize_player(player_num, player_name):
-    """
-    Function to create a new player
-
-    Parameters
-    ----------
-    player_num : int
-        If players are added in order this is the position in which the player has been added
-    player_name : str
-        The name of the player
-
-    Returns
-    -------
-    new_player : Player
-        An instance of the Player class
-    """
-    new_player = Player(
-        player_id=player_num,
-        name=player_name
-    )
-    return new_player
-
-
-def initialize_players(player_names):
-    """
-    Function to initialise the players of the Monopoly game.
-
-    Parameters
-    ----------
-    player_names : list
-        A list of player names
-
-    Returns
-    -------
-    players : list
-        A list containing all the players
-    """
-    players = []
-    num_players = len(player_names)
-
-    if 2 <= num_players <= 5:
-        for i, name in enumerate(player_names, start=1):
-            players.append(initialize_player(i, name))
-    else:
-        raise ValueError("The number of players must be between 2 and 5.")
-
-    return players
