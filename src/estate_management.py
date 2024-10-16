@@ -58,7 +58,7 @@ class Estate:
         """
         self.owner = new_owner
 
-    def mortgage_esta(self):
+    def mortgage_estate(self):
         """
         Mortgages the estate if it is not already mortgaged.
 
