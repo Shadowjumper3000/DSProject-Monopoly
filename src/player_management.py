@@ -210,8 +210,7 @@ def initialize_players():
             if 2 <= num_players <= 5:
                 print("Initialising the game with 3 players...")
                 break
-            else:
-                print("The number must be between 2 and 5. Please try again.")
+            print("The number must be between 2 and 5. Please try again.")
 
         except ValueError:
             print("Invalid input. Please enter a valid integer.")
