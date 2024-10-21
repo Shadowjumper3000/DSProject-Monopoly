@@ -3,6 +3,7 @@ main.py
 
 This is the main file for the project and will contain Game logic.
 """
+
 import os
 import random
 
@@ -22,6 +23,7 @@ class Game:
         self.players = []
         self.estates = estate_management.initialize_estates()
         self.current_player_index = 0
+        self.game_over = False
 
     def add_player(self, name):
         """
@@ -120,10 +122,12 @@ class Game:
         trade_with = input("Enter the name of the player you want to trade with: ")
         trade_player = next((p for p in self.players if p.name == trade_with), None)
         if trade_player:
-            trade_action = input(f"Do you want to (B)uy or (S)ell an estate with {trade_player.name}? ").upper()
-            if trade_action == 'B':
+            trade_action = input(
+                f"Do you want to (B)uy or (S)ell an estate with {trade_player.name}?"
+            ).upper()
+            if trade_action == "B":
                 self.handle_buy_trade(player, trade_player)
-            elif trade_action == 'S':
+            elif trade_action == "S":
                 self.handle_sell_trade(player, trade_player)
             else:
                 print("Invalid action. Please choose (B)uy or (S)ell.")
@@ -142,16 +146,29 @@ class Game:
         for estate in trade_player.estates:
             status = "(Mortgaged)" if estate.mortgaged else ""
             print(f"  - {estate.name} {status}")
-        trade_estate = input(f"Enter the name of the estate you want to buy from {trade_player.name}: ")
-        estate_to_trade = next((estate for estate in trade_player.estates if estate.name == trade_estate), None)
+        trade_estate = input(
+            f"Enter the name of the estate you want to buy from {trade_player.name}: "
+        )
+        estate_to_trade = next(
+            (estate for estate in trade_player.estates if estate.name == trade_estate),
+            None,
+        )
         if estate_to_trade:
-            offer = int(input(f"How much money do you offer to {trade_player.name} for {estate_to_trade.name}? "))
+            offer = int(
+                input(
+                    f"""How much money do you offer to
+                     {trade_player.name} for {estate_to_trade.name}? """
+                )
+            )
             if offer <= player.money:
                 trade_player.estates.remove(estate_to_trade)
                 player.estates.append(estate_to_trade)
                 player.money -= offer
                 trade_player.money += offer
-                print(f"{player.name} bought {estate_to_trade.name} from {trade_player.name} for ${offer}")
+                print(
+                    f"""{player.name} bought {estate_to_trade.name} from
+                     {trade_player.name} for ${offer}"""
+                )
             else:
                 print("You don't have enough money to make this offer.")
         else:
@@ -165,18 +182,31 @@ class Game:
             player (Player): The player who wants to sell the estate.
             trade_player (Player): The player who wants to buy the estate.
         """
-        trade_estate = input(f"Enter the name of the estate you want to sell to {trade_player.name}: ")
-        estate_to_trade = next((estate for estate in player.estates if estate.name == trade_estate), None)
+        trade_estate = input(
+            f"Enter the name of the estate you want to sell to {trade_player.name}: "
+        )
+        estate_to_trade = next(
+            (estate for estate in player.estates if estate.name == trade_estate), None
+        )
         if estate_to_trade:
-            offer = int(input(f"How much money do you want from {trade_player.name} for {estate_to_trade.name}? "))
+            offer = int(
+                input(
+                    f"""How much money do you want from
+                     {trade_player.name} for {estate_to_trade.name}?"""
+                )
+            )
             if offer <= trade_player.money:
                 player.estates.remove(estate_to_trade)
                 trade_player.estates.append(estate_to_trade)
                 trade_player.money -= offer
                 player.money += offer
-                print(f"{player.name} sold {estate_to_trade.name} to {trade_player.name} for ${offer}")
+                print(
+                    f"{player.name} sold {estate_to_trade.name} to {trade_player.name} for ${offer}"
+                )
             else:
-                print(f"{trade_player.name} doesn't have enough money to make this offer.")
+                print(
+                    f"{trade_player.name} doesn't have enough money to make this offer."
+                )
         else:
             print(f"You don't own {trade_estate}.")
 
@@ -191,10 +221,19 @@ class Game:
             print("Properties you can mortgage:")
             for i, estate in enumerate(player.estates, 1):
                 print(f"{i}. {estate.name} (Mortgage value: ${estate.cost // 2})")
-            choice = int(input("Enter the number of the property you want to mortgage: ")) - 1
+            choice = (
+                int(
+                    input(
+                        "Enter the number of the property you want to mortgage: "
+                    )
+                ) - 1
+            )
             if 0 <= choice < len(player.estates):
                 player.estates[choice].mortgage_estate()
-                print(f"{player.name} mortgaged {player.estates[choice].name} for ${player.estates[choice].cost // 2}")
+                print(
+                    f"""{player.name} mortgaged {player.estates[choice].name}
+                     for ${player.estates[choice].cost // 2}"""
+                )
             else:
                 print("Invalid choice.")
         else:
@@ -204,7 +243,7 @@ class Game:
         """
         Play a turn for the current player.
         """
-        os.system('cls' if os.name == 'nt' else 'clear')
+        os.system("cls" if os.name == "nt" else "clear")
         player = self.players[self.current_player_index]
         print("-" * 20)
         print(f"{player.name}'s turn")
@@ -213,34 +252,40 @@ class Game:
         while True:
             self.display_player_status(player)
             action = input(
-                f"Do you want to (B)uy {self.estates[player.position].name} for {self.estates[player.position].cost}, (T)rade, or (M)ortgage a property? (Enter to skip): ").upper()
-            if action == 'B':
+                f"""Do you want to (B)uy {self.estates[player.position].name}
+                 for {self.estates[player.position].cost}, (T)rade, or (M)ortgage a property?
+                 (Enter to skip): """
+            ).upper()
+            if action == "B":
                 self.handle_buy(player)
-            elif action == 'T':
+            elif action == "T":
                 self.handle_trade(player)
-            elif action == 'M':
+            elif action == "M":
                 self.handle_mortgage(player)
-            elif action == 'Win':
+            elif action == "Win":
                 self.game_over = True
-            elif action == '':
+            elif action == "":
                 break
             else:
-                print("Invalid action. Please choose (B)uy, (T)rade, (M)ortgage, or press Enter to skip.")
+                print(
+                    """Invalid action.
+                     Please choose (B)uy, (T)rade, (M)ortgage, or press Enter to skip."""
+                )
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
 
 
 if __name__ == "__main__":
     game = Game()
-    num_players = 0
-    while num_players < 2 or num_players > 5:
+    NUM_PLAYERS = 0
+    while NUM_PLAYERS < 2 or NUM_PLAYERS > 5:
         try:
-            num_players = int(input("Enter the number of players (2-5): "))
-            if num_players < 2 or num_players > 5:
+            NUM_PLAYERS = int(input("Enter the number of players (2-5): "))
+            if NUM_PLAYERS < 2 or NUM_PLAYERS > 5:
                 print("Please enter a number between 2 and 5.")
         except ValueError:
             print("Invalid input. Please enter a number between 2 and 5.")
 
-    for j in range(num_players):
+    for j in range(NUM_PLAYERS):
         p_name = input(f"Enter the name for player {j + 1}: ")
         game.add_player(p_name)
     while True:

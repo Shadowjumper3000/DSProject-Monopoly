@@ -70,10 +70,22 @@ def initialize_chance_cards():
     """
     chance_cards = [
         Card("Chance Card", "Advance to Go. Collect $200.", 200),
-        Card("Chance Card", "Advance to Illinois Avenue. If you pass Go, collect $200.", 0),
-        Card("Chance Card", "Advance to St. Charles Place. If you pass Go, collect $200.", 0),
-        Card("Chance Card", """Advance to nearest Utility. If unowned, you may buy it from the Bank.
-             If owned, throw dice and pay owner a total ten times the amount thrown.""", 0)
+        Card(
+            "Chance Card",
+            "Advance to Illinois Avenue. If you pass Go, collect $200.",
+            0,
+        ),
+        Card(
+            "Chance Card",
+            "Advance to St. Charles Place. If you pass Go, collect $200.",
+            0,
+        ),
+        Card(
+            "Chance Card",
+            """Advance to nearest Utility. If unowned, you may buy it from the Bank.
+             If owned, throw dice and pay owner a total ten times the amount thrown.""",
+            0,
+        ),
     ]
     return chance_cards
 
@@ -91,6 +103,6 @@ def initialize_community_chest_cards():
         Card("Community Chest Card", "Advance to Go. Collect $200.", 200),
         Card("Community Chest Card", "Bank error in your favor. Collect $200.", 200),
         Card("Community Chest Card", "Doctor's fees. Pay $50.", -50),
-        Card("Community Chest Card", "From sale of stock you get $50.", 50)
+        Card("Community Chest Card", "From sale of stock you get $50.", 50),
     ]
     return community_chest_cards

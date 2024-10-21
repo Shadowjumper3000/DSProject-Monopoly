@@ -11,7 +11,8 @@ LinkedList
     A simple implementation of a singly linked list.
 """
 
-class Node: # pylint: disable=too-few-public-methods
+
+class Node:  # pylint: disable=too-few-public-methods
     """
     A class used to represent a Node in a singly linked list.
 
@@ -32,6 +33,7 @@ class Node: # pylint: disable=too-few-public-methods
         """
         self.data = data
         self.next = None
+
 
 class LinkedList:
     """

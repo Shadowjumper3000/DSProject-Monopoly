@@ -6,7 +6,7 @@ This module contains the Player class.
 
 
 class Player:
-    """"
+    """ "
     A class to represent the player in the Monopoly game.
 
     Attributes
@@ -84,10 +84,14 @@ class Player:
         if estate in self.estates:
             mortgage = estate.mortage_estate()
             if mortgage is None:
-                print("Unable to mortgage estate, because it has already been mortgaged")
+                print(
+                    "Unable to mortgage estate, because it has already been mortgaged"
+                )
             else:
                 self.money += mortgage
-                print(f"estate has been mortgaged. {mortgage} has been added to you money")
+                print(
+                    f"estate has been mortgaged. {mortgage} has been added to you money"
+                )
         else:
             print(f"Unable to mortgage estate, {self.name} does not own this estate")
 
@@ -106,7 +110,9 @@ class Player:
                 print("Unable to unmortgage estate, because it has not been mortgaged")
             else:
                 self.money -= mortgage
-                print(f"estate has been unmortgaged. {mortgage} has been deducted from you money")
+                print(
+                    f"estate has been unmortgaged. {mortgage} has been deducted from you money"
+                )
         else:
             print(f"Unable to umortgage estate, {self.name} does not own this estate")
 
@@ -118,7 +124,7 @@ class Player:
         ----------
         rent_amount: int
             The amount of rent the player must pay
-        owner: 
+        owner:
             The player who owns the estate and collects the rent
         """
         if self.money >= rent_amount:
@@ -173,14 +179,18 @@ class Player:
             The cost of the estate
         """
         if buyer_player.money < estate_cost:
-            print(f"{buyer_player.name} does not have enough money to buy {estate.name}")
+            print(
+                f"{buyer_player.name} does not have enough money to buy {estate.name}"
+            )
             return -1
         if estate in self.estates:
             self.estates.remove(estate)
             buyer_player.estates.append(estate)
             buyer_player.money -= estate_cost
             self.money += estate_cost
-            print(f"{self.name} has sold {estate.name} to {buyer_player.name} for {estate.cost}")
+            print(
+                f"{self.name} has sold {estate.name} to {buyer_player.name} for {estate.cost}"
+            )
         else:
             print(f"{self.name} does not own {estate.name}")
             return -1
