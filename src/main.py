@@ -6,8 +6,8 @@ This is the main file for the project and will contain Game logic.
 import os
 import random
 
-import player_management
-import estate_management
+from . import player_management
+from . import estate_management
 
 
 class Game:
@@ -57,6 +57,15 @@ class Game:
         if player.position + steps >= len(self.estates):
             player.money += 200
             print(f"{player.name} passed Go and collected $200")
+        self.handle_estate(player)
+
+    def handle_estate(self, player):
+        """
+        Handle the logic when a player lands on an estate.
+
+        Args:
+            player (Player): The player who landed on the estate.
+        """
         current_estate = self.estates[player.position]
         if current_estate.owner is not None and not current_estate.mortgaged:
             print(f"{current_estate.name} is owned by {current_estate.owner}")
@@ -74,6 +83,123 @@ class Game:
             print("You landed on Go to Jail! You are now in Jail.")
             player.in_jail = True
 
+    def display_player_status(self, player):
+        """
+        Display the current status of the player.
+
+        Args:
+            player (Player): The player whose status is to be displayed.
+        """
+        print("-" * 20)
+        print(f"{player.name} is currently on {self.estates[player.position].name}")
+        print(f"{player.name} has ${player.money}")
+        print(f"{player.name} currently owns:")
+        for estate in player.estates:
+            status = "(Mortgaged)" if estate.mortgaged else ""
+            print(f"  - {estate.name} {status}")
+
+    def handle_buy(self, player):
+        """
+        Handle the logic for buying an estate.
+
+        Args:
+            player (Player): The player who wants to buy the estate.
+        """
+        player.buy_estate(self.estates[player.position])
+
+    def handle_trade(self, player):
+        """
+        Handle the logic for trading estates between players.
+
+        Args:
+            player (Player): The player who wants to trade.
+        """
+        print("Players in the game:")
+        for p in self.players:
+            print(f"  - {p.name}")
+        trade_with = input("Enter the name of the player you want to trade with: ")
+        trade_player = next((p for p in self.players if p.name == trade_with), None)
+        if trade_player:
+            trade_action = input(f"Do you want to (B)uy or (S)ell an estate with {trade_player.name}? ").upper()
+            if trade_action == 'B':
+                self.handle_buy_trade(player, trade_player)
+            elif trade_action == 'S':
+                self.handle_sell_trade(player, trade_player)
+            else:
+                print("Invalid action. Please choose (B)uy or (S)ell.")
+        else:
+            print(f"No player named {trade_with} found.")
+
+    def handle_buy_trade(self, player, trade_player):
+        """
+        Handle the logic for buying an estate from another player.
+
+        Args:
+            player (Player): The player who wants to buy the estate.
+            trade_player (Player): The player who owns the estate.
+        """
+        print(f"{trade_player.name} currently owns:")
+        for estate in trade_player.estates:
+            status = "(Mortgaged)" if estate.mortgaged else ""
+            print(f"  - {estate.name} {status}")
+        trade_estate = input(f"Enter the name of the estate you want to buy from {trade_player.name}: ")
+        estate_to_trade = next((estate for estate in trade_player.estates if estate.name == trade_estate), None)
+        if estate_to_trade:
+            offer = int(input(f"How much money do you offer to {trade_player.name} for {estate_to_trade.name}? "))
+            if offer <= player.money:
+                trade_player.estates.remove(estate_to_trade)
+                player.estates.append(estate_to_trade)
+                player.money -= offer
+                trade_player.money += offer
+                print(f"{player.name} bought {estate_to_trade.name} from {trade_player.name} for ${offer}")
+            else:
+                print("You don't have enough money to make this offer.")
+        else:
+            print(f"{trade_player.name} doesn't own {trade_estate}.")
+
+    def handle_sell_trade(self, player, trade_player):
+        """
+        Handle the logic for selling an estate to another player.
+
+        Args:
+            player (Player): The player who wants to sell the estate.
+            trade_player (Player): The player who wants to buy the estate.
+        """
+        trade_estate = input(f"Enter the name of the estate you want to sell to {trade_player.name}: ")
+        estate_to_trade = next((estate for estate in player.estates if estate.name == trade_estate), None)
+        if estate_to_trade:
+            offer = int(input(f"How much money do you want from {trade_player.name} for {estate_to_trade.name}? "))
+            if offer <= trade_player.money:
+                player.estates.remove(estate_to_trade)
+                trade_player.estates.append(estate_to_trade)
+                trade_player.money -= offer
+                player.money += offer
+                print(f"{player.name} sold {estate_to_trade.name} to {trade_player.name} for ${offer}")
+            else:
+                print(f"{trade_player.name} doesn't have enough money to make this offer.")
+        else:
+            print(f"You don't own {trade_estate}.")
+
+    def handle_mortgage(self, player):
+        """
+        Handle the logic for mortgaging a property.
+
+        Args:
+            player (Player): The player who wants to mortgage a property.
+        """
+        if player.estates:
+            print("Properties you can mortgage:")
+            for i, estate in enumerate(player.estates, 1):
+                print(f"{i}. {estate.name} (Mortgage value: ${estate.cost // 2})")
+            choice = int(input("Enter the number of the property you want to mortgage: ")) - 1
+            if 0 <= choice < len(player.estates):
+                player.estates[choice].mortgage_estate()
+                print(f"{player.name} mortgaged {player.estates[choice].name} for ${player.estates[choice].cost // 2}")
+            else:
+                print("Invalid choice.")
+        else:
+            print("You don't have any properties to mortgage.")
+
     def play_turn(self):
         """
         Play a turn for the current player.
@@ -85,76 +211,17 @@ class Game:
 
         self.move_player(player, self.roll_dice())
         while True:
-            print("-" * 20)
-            print(f"{player.name} is currently on {self.estates[player.position].name}")
-            print(f"{player.name} has ${player.money}")
-            print(f"{player.name} currently owns:")
-            for estate in player.estates:
-                status = "(Mortgaged)" if estate.mortgaged else ""
-                print(f"  - {estate.name} {status}")
+            self.display_player_status(player)
             action = input(
                 f"Do you want to (B)uy {self.estates[player.position].name} for {self.estates[player.position].cost}, (T)rade, or (M)ortgage a property? (Enter to skip): ").upper()
             if action == 'B':
-                player.buy_estate(self.estates[player.position])
+                self.handle_buy(player)
             elif action == 'T':
-                print("Players in the game:")
-                for p in self.players:
-                    print(f"  - {p.name}")
-                trade_with = input("Enter the name of the player you want to trade with: ")
-                trade_player = next((p for p in self.players if p.name == trade_with), None)
-                if trade_player:
-                    trade_action = input(f"Do you want to (B)uy or (S)ell an estate with {trade_player.name}? ").upper()
-                    if trade_action == 'B':
-                        print(f"{trade_player.name} currently owns:")
-                        for estate in trade_player.estates:
-                            status = "(Mortgaged)" if estate.mortgaged else ""
-                            print(f"  - {estate.name} {status}")
-                        trade_estate = input(f"Enter the name of the estate you want to buy from {trade_player.name}: ")
-                        estate_to_trade = next((estate for estate in trade_player.estates if estate.name == trade_estate), None)
-                        if estate_to_trade:
-                            offer = int(input(f"How much money do you offer to {trade_player.name} for {estate_to_trade.name}? "))
-                            if offer <= player.money:
-                                trade_player.estates.remove(estate_to_trade)
-                                player.estates.append(estate_to_trade)
-                                player.money -= offer
-                                trade_player.money += offer
-                                print(f"{player.name} bought {estate_to_trade.name} from {trade_player.name} for ${offer}")
-                            else:
-                                print("You don't have enough money to make this offer.")
-                        else:
-                            print(f"{trade_player.name} doesn't own {trade_estate}.")
-                    elif trade_action == 'S':
-                        trade_estate = input(f"Enter the name of the estate you want to sell to {trade_player.name}: ")
-                        estate_to_trade = next((estate for estate in player.estates if estate.name == trade_estate), None)
-                        if estate_to_trade:
-                            offer = int(input(f"How much money do you want from {trade_player.name} for {estate_to_trade.name}? "))
-                            if offer <= trade_player.money:
-                                player.estates.remove(estate_to_trade)
-                                trade_player.estates.append(estate_to_trade)
-                                trade_player.money -= offer
-                                player.money += offer
-                                print(f"{player.name} sold {estate_to_trade.name} to {trade_player.name} for ${offer}")
-                            else:
-                                print(f"{trade_player.name} doesn't have enough money to make this offer.")
-                        else:
-                            print(f"You don't own {trade_estate}.")
-                    else:
-                        print("Invalid action. Please choose (B)uy or (S)ell.")
-                else:
-                    print(f"No player named {trade_with} found.")
+                self.handle_trade(player)
             elif action == 'M':
-                if player.estates:
-                    print("Properties you can mortgage:")
-                    for i, estate in enumerate(player.estates, 1):
-                        print(f"{i}. {estate.name} (Mortgage value: ${estate.cost // 2})")
-                    choice = int(input("Enter the number of the property you want to mortgage: ")) - 1
-                    if 0 <= choice < len(player.estates):
-                        player.estates[choice].mortgage_estate()
-                        print(f"{player.name} mortgaged {player.estates[choice].name} for ${player.estates[choice].cost // 2}")
-                    else:
-                        print("Invalid choice.")
-                else:
-                    print("You don't have any properties to mortgage.")
+                self.handle_mortgage(player)
+            elif action == 'Win':
+                self.game_over = True
             elif action == '':
                 break
             else:
