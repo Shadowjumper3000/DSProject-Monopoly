@@ -1,292 +1,449 @@
 """
-main.py
-
-This is the main file for the project and will contain Game logic.
+Main file for the Monopoly game.
 """
 
-import os
+import pygame
 import random
-
-from . import player_management
-from . import estate_management
+from src.player_management import Player
+from src.estate_management import initialize_estates
+from src.card_management import (
+    create_chance_deck,
+    create_community_chest_deck,
+    apply_effect,
+)
+from src.utils import wrap_text
 
 
 class Game:
-    """
-    Class representing the Monopoly game.
-    """
-
     def __init__(self):
-        """
-        Initialize the game with players, estates, and the current player index.
-        """
+        pygame.init()  # Initialize Pygame
+        self.screen = pygame.display.set_mode((1000, 700))  # Extended width to 1000
+        pygame.display.set_caption("Monopoly")
+        self.background = pygame.image.load("src/img/upd_monopoly_board.png")
+        self.font = pygame.font.Font(None, 36)
         self.players = []
-        self.estates = estate_management.initialize_estates()
+        self.estates = initialize_estates()
         self.current_player_index = 0
-        self.game_over = False
+        self.dice_rolled = False
+        self.chance_deck = create_chance_deck()
+        self.community_chest_deck = create_community_chest_deck()
+        self.buttons = [
+            {
+                "label": "Roll Dice",
+                "action": self.roll_dice,
+                "rect": pygame.Rect(730, 50, 120, 50),
+                "enabled": True,
+            },
+            {
+                "label": "Buy Property",
+                "action": self.handle_buy,
+                "rect": pygame.Rect(860, 50, 120, 50),
+                "enabled": False,
+            },
+            {
+                "label": "Build House",
+                "action": self.handle_build_house,
+                "rect": pygame.Rect(730, 110, 120, 50),
+                "enabled": False,
+            },
+            {
+                "label": "Mortgage",
+                "action": self.handle_mortgage,
+                "rect": pygame.Rect(860, 110, 120, 50),
+                "enabled": True,
+            },
+            {
+                "label": "Trade",
+                "action": self.handle_trade,
+                "rect": pygame.Rect(730, 170, 120, 50),
+                "enabled": True,
+            },
+            {
+                "label": "End Turn",
+                "action": self.end_turn,
+                "rect": pygame.Rect(860, 170, 120, 50),
+                "enabled": True,
+            },
+        ]
+        self.buttons[0]["enabled"] = True  # Enable "Roll Dice" button
+        self.running = True
+        self.setup_phase = True
+        self.input_box = pygame.Rect(250, 300, 200, 50)
+        self.input_text = ""
+        self.num_players = 0
+        self.current_setup_step = 0
+        self.token_colors = ["red", "blue", "green", "yellow"]
+        self.current_color_index = 0
+        self.current_card = None
 
-    def add_player(self, name):
-        """
-        Add a player to the game.
+    def move_to_nearest_utility(self, player):
+        """Move player to the nearest utility.
+        # !!! This method is not used in the current implementation.
 
         Args:
-            name (str): The name of the player.
+            player (Player): The player to move.
         """
-        player_id = len(self.players) + 1
-        player = player_management.Player(player_id, name)
-        self.players.append(player)
+        utilities = ["Electric Company", "Water Works"]
+        current_position = player.position
+        nearest_utility = min(
+            utilities,
+            key=lambda utility: (self.estates.index(utility) - current_position)
+            % len(self.estates),
+        )
+        self.move_player_to(player, nearest_utility)
+
+    def move_to_nearest_railroad(self, player):
+        """Move player to the nearest railroad.
+        # !!! This method is not used in the current implementation.
+
+        Args:
+            player (Player): The player to move.
+        """
+        railroads = [
+            "Kings Cross Station",
+            "Marylebone Station",
+            "Fenchurch St. Station",
+            "Liverpool St. Station",
+        ]
+        current_position = player.position
+        nearest_railroad = min(
+            railroads,
+            key=lambda railroad: (self.estates.index(railroad) - current_position)
+            % len(self.estates),
+        )
+        self.move_player_to(player, nearest_railroad)
+
+    def move_player_to(self, player, location_name):
+        """Move player to a specific location.
+        # TODO Update to pass the location object instead of the name.
+
+        Args:
+            player (Player): The player to move.
+            location_name (str): The name of the location to move to.
+        """
+        target_position = next(
+            i for i, estate in enumerate(self.estates) if estate.name == location_name
+        )
+        steps = (target_position - player.position) % len(self.estates)
+        self.move_player(player, steps)
+
+    def draw_player_info(self):
+        """
+        Draw player information on the right side of the screen.
+        """
+        current_player = self.players[self.current_player_index]
+        info_x = 705
+        info_y = 230  # Start below the buttons
+        line_height = 30
+
+        # Clear the area where player info is displayed
+        pygame.draw.rect(self.screen, (255, 255, 255), (info_x, 10, 200, 20))
+        pygame.draw.rect(self.screen, (255, 255, 255), (info_x, info_y, 400, 600))
+
+        # Draw current player name
+        name_text = self.font.render(f"Player: {current_player.name}", True, (0, 0, 0))
+        self.screen.blit(name_text, (info_x, 10))  # Display at the top right
+        info_y += line_height
+
+        # Draw current player cash
+        cash_text = self.font.render(
+            f"Cash: ${current_player.balance}", True, (0, 0, 0)
+        )
+        self.screen.blit(cash_text, (info_x, info_y))
+        info_y += line_height
+
+        # Draw current player properties
+        properties_text = self.font.render("Properties:", True, (0, 0, 0))
+        self.screen.blit(properties_text, (info_x, info_y))
+        info_y += line_height
+
+        # Define group colors
+        group_colors = {
+            "Brown": (139, 69, 19),
+            "Light Blue": (173, 216, 230),
+            "Pink": (255, 182, 193),
+            "Orange": (255, 165, 0),
+            "Red": (255, 0, 0),
+            "Yellow": (255, 255, 0),
+            "Green": (0, 128, 0),
+            "Dark Blue": (0, 0, 139),
+            "Utility": (192, 192, 192),
+            "Station": (0, 0, 0),
+            "Community Chest": (0, 0, 255),
+            "Chance": (255, 165, 0),
+            "Tax": (128, 128, 128),
+            "Corner": (0, 0, 0),
+        }
+
+        for estate in current_player.properties:
+            estate_color = group_colors.get(
+                estate.group, (0, 0, 0)
+            )  # Default to black if group not found
+            estate_text = self.font.render(f"- {estate.name}", True, estate_color)
+            self.screen.blit(estate_text, (info_x, info_y))
+            info_y += line_height
+
+        # Draw picked-up Community Chest cards
+        cards_text = self.font.render("Cards:", True, (0, 0, 0))
+        self.screen.blit(cards_text, (info_x, info_y))
+        info_y += line_height
+
+        max_width = 250  # Maximum width for card text
+
+        for card in current_player.community_chest_cards:
+            wrapped_lines = wrap_text(card.description, self.font, max_width)
+            for line in wrapped_lines:
+                card_text = self.font.render(line, True, (0, 0, 0))
+                self.screen.blit(card_text, (info_x, info_y))
+                info_y += line_height
 
     def roll_dice(self):
         """
-        Roll two dice and return their sum.
-
-        Returns:
-            int: The sum of the two dice.
+        Roll the dice and move the current player.
         """
-        d1, d2 = random.randint(1, 6), random.randint(1, 6)
-        print(f"You rolled: {d1} and {d2} for a total of {d1 + d2}")
-        return d1 + d2
+        if not self.dice_rolled:
+            dice_roll = random.randint(1, 6) + random.randint(1, 6)
+            print(f"Dice rolled: {dice_roll}")
+            self.move_player(self.players[self.current_player_index], dice_roll)
+            self.dice_rolled = True
+            self.buttons[0]["enabled"] = False  # Disable "Roll Dice" button
+        else:
+            print("You have already rolled the dice this turn.")
 
     def move_player(self, player, steps):
         """
-        Move a player by a given number of steps.
+        Move the player a certain number of steps on the board.
 
         Args:
             player (Player): The player to move.
             steps (int): The number of steps to move the player.
         """
+        print(f"Before move: {player.name} is on position {player.position}")
+        old_position = player.position
         player.position = (player.position + steps) % len(self.estates)
-        if player.position + steps >= len(self.estates):
-            player.money += 200
+        if player.position < old_position:
+            player.update_balance(200)
             print(f"{player.name} passed Go and collected $200")
+        print(f"After move: {player.name} is on position {player.position}")
         self.handle_estate(player)
 
     def handle_estate(self, player):
         """
-        Handle the logic when a player lands on an estate.
+        Handle the current estate the player is on.
+        Called after player moves to a new estate.
 
         Args:
-            player (Player): The player who landed on the estate.
+            player (Player): The player whose turn it is.
         """
         current_estate = self.estates[player.position]
-        if current_estate.owner is not None and not current_estate.mortgaged:
-            print(f"{current_estate.name} is owned by {current_estate.owner}")
-            if current_estate.owner != player:
-                rent = current_estate.rent
-                print(f"{player.name} paid {current_estate.owner.name} ${rent}")
-                player.money -= rent
-                current_estate.owner.money += rent
-        if current_estate.street_group == 15:
-            print("You landed on Free Parking! You get $500!")
-            player.money += 500
-        elif current_estate.street_group == 11:
-            print("You landed on a chance card! You get $100!")
-        elif current_estate.street_group == 16:
-            print("You landed on Go to Jail! You are now in Jail.")
-            player.in_jail = True
-
-    def display_player_status(self, player):
-        """
-        Display the current status of the player.
-
-        Args:
-            player (Player): The player whose status is to be displayed.
-        """
-        print("-" * 20)
-        print(f"{player.name} is currently on {self.estates[player.position].name}")
-        print(f"{player.name} has ${player.money}")
+        print(f"{player.name} is currently on {current_estate.name}")
+        print(f"{player.name} has ${player.balance}")
         print(f"{player.name} currently owns:")
-        for estate in player.estates:
+        for estate in player.properties:
             status = "(Mortgaged)" if estate.mortgaged else ""
             print(f"  - {estate.name} {status}")
 
-    def handle_buy(self, player):
-        """
-        Handle the logic for buying an estate.
+        if current_estate.name == "Chance":
+            self.draw_chance_card(player)
+        elif current_estate.name == "Community Chest":
+            self.draw_community_chest_card(player)
+        elif current_estate.name == "Go To Jail":
+            player.go_to_jail()
+            print(f"{player.name} is going to jail")
+        elif current_estate.name == "Tax":
+            player.update_balance(-current_estate.rent)
+            print(f"{player.name} paid ${current_estate.rent} in taxes")
+        else:
+            if current_estate.owner is None:
+                self.buttons[1]["enabled"] = True  # Enable "Buy Property" button
+            elif current_estate.owner == player:
+                self.buttons[2]["enabled"] = True  # Enable "Build House" button
 
-        Args:
-            player (Player): The player who wants to buy the estate.
-        """
-        player.buy_estate(self.estates[player.position])
+    def handle_build_house(self):
+        player = self.players[self.current_player_index]
+        current_estate = self.estates[player.position]
+        if current_estate.owner == player:
+            if current_estate.build_house():
+                print(f"{player.name} built a house on {current_estate.name}")
+            else:
+                print(f"{player.name} cannot build a house on {current_estate.name}")
+        self.buttons[2]["enabled"] = False  # Disable "Build House" button
+
+    def display_card(self, card):
+        self.current_card = card
+        card_rect = pygame.Rect(200, 250, 300, 200)  # Centered on the 700x700 board
+        pygame.draw.rect(self.screen, (255, 255, 255), card_rect)
+        pygame.draw.rect(self.screen, (0, 0, 0), card_rect, 2)
+
+        max_width = (
+            card_rect.width - 20
+        )  # Maximum width for card text with some padding
+        wrapped_lines = wrap_text(card.description, self.font, max_width)
+        text_y = card_rect.y + 10  # Start text a little below the top of the card
+
+        for line in wrapped_lines:
+            card_text = self.font.render(line, True, (0, 0, 0))
+            self.screen.blit(card_text, (card_rect.x + 10, text_y))
+            text_y += self.font.get_linesize()
+
+        pygame.display.flip()
+
+    def draw_chance_card(self, player):
+        card = self.chance_deck.draw_card()
+        print(type(card))
+        self.display_card(card)
+        apply_effect(player, self, card)
+        print(f"{player.name} drew a Chance card: {card.description}")
+
+    def draw_community_chest_card(self, player):
+        card = self.community_chest_deck.draw_card()
+        self.display_card(card)
+        apply_effect(player, self, card)
+        print(f"{player.name} drew a Community Chest card: {card.description}")
+
+    def handle_click(self, pos):
+        if hasattr(self, "current_card") and self.current_card:
+            card_rect = pygame.Rect(350, 300, 300, 100)
+            if card_rect.collidepoint(pos):
+                self.current_card = None
+                self.update_board()
+                return
+
+        for button in self.buttons:
+            if button["rect"].collidepoint(pos) and button["enabled"]:
+                button["action"]()
+
+    def handle_buy(self):
+        player = self.players[self.current_player_index]
+        current_estate = self.estates[player.position]
+        if current_estate.owner is None:
+            if current_estate.buy_estate(player):
+                print(f"{player.name} bought {current_estate.name}")
+            else:
+                print(f"{player.name} could not buy {current_estate.name}")
+        self.buttons[1]["enabled"] = False  # Disable "Buy Property" button
+        self.update_board()
 
     def handle_trade(self, player):
-        """
-        Handle the logic for trading estates between players.
-
-        Args:
-            player (Player): The player who wants to trade.
-        """
-        print("Players in the game:")
-        for p in self.players:
-            print(f"  - {p.name}")
-        trade_with = input("Enter the name of the player you want to trade with: ")
-        trade_player = next((p for p in self.players if p.name == trade_with), None)
-        if trade_player:
-            trade_action = input(
-                f"Do you want to (B)uy or (S)ell an estate with {trade_player.name}?"
-            ).upper()
-            if trade_action == "B":
-                self.handle_buy_trade(player, trade_player)
-            elif trade_action == "S":
-                self.handle_sell_trade(player, trade_player)
-            else:
-                print("Invalid action. Please choose (B)uy or (S)ell.")
-        else:
-            print(f"No player named {trade_with} found.")
-
-    def handle_buy_trade(self, player, trade_player):
-        """
-        Handle the logic for buying an estate from another player.
-
-        Args:
-            player (Player): The player who wants to buy the estate.
-            trade_player (Player): The player who owns the estate.
-        """
-        print(f"{trade_player.name} currently owns:")
-        for estate in trade_player.estates:
-            status = "(Mortgaged)" if estate.mortgaged else ""
-            print(f"  - {estate.name} {status}")
-        trade_estate = input(
-            f"Enter the name of the estate you want to buy from {trade_player.name}: "
-        )
-        estate_to_trade = next(
-            (estate for estate in trade_player.estates if estate.name == trade_estate),
-            None,
-        )
-        if estate_to_trade:
-            offer = int(
-                input(
-                    f"""How much money do you offer to
-                     {trade_player.name} for {estate_to_trade.name}? """
-                )
-            )
-            if offer <= player.money:
-                trade_player.estates.remove(estate_to_trade)
-                player.estates.append(estate_to_trade)
-                player.money -= offer
-                trade_player.money += offer
-                print(
-                    f"""{player.name} bought {estate_to_trade.name} from
-                     {trade_player.name} for ${offer}"""
-                )
-            else:
-                print("You don't have enough money to make this offer.")
-        else:
-            print(f"{trade_player.name} doesn't own {trade_estate}.")
-
-    def handle_sell_trade(self, player, trade_player):
-        """
-        Handle the logic for selling an estate to another player.
-
-        Args:
-            player (Player): The player who wants to sell the estate.
-            trade_player (Player): The player who wants to buy the estate.
-        """
-        trade_estate = input(
-            f"Enter the name of the estate you want to sell to {trade_player.name}: "
-        )
-        estate_to_trade = next(
-            (estate for estate in player.estates if estate.name == trade_estate), None
-        )
-        if estate_to_trade:
-            offer = int(
-                input(
-                    f"""How much money do you want from
-                     {trade_player.name} for {estate_to_trade.name}?"""
-                )
-            )
-            if offer <= trade_player.money:
-                player.estates.remove(estate_to_trade)
-                trade_player.estates.append(estate_to_trade)
-                trade_player.money -= offer
-                player.money += offer
-                print(
-                    f"{player.name} sold {estate_to_trade.name} to {trade_player.name} for ${offer}"
-                )
-            else:
-                print(
-                    f"{trade_player.name} doesn't have enough money to make this offer."
-                )
-        else:
-            print(f"You don't own {trade_estate}.")
+        pass
 
     def handle_mortgage(self, player):
-        """
-        Handle the logic for mortgaging a property.
+        pass
 
-        Args:
-            player (Player): The player who wants to mortgage a property.
-        """
-        if player.estates:
-            print("Properties you can mortgage:")
-            for i, estate in enumerate(player.estates, 1):
-                print(f"{i}. {estate.name} (Mortgage value: ${estate.cost // 2})")
-            choice = (
-                int(
-                    input(
-                        "Enter the number of the property you want to mortgage: "
-                    )
-                ) - 1
-            )
-            if 0 <= choice < len(player.estates):
-                player.estates[choice].mortgage_estate()
-                print(
-                    f"""{player.name} mortgaged {player.estates[choice].name}
-                     for ${player.estates[choice].cost // 2}"""
-                )
-            else:
-                print("Invalid choice.")
-        else:
-            print("You don't have any properties to mortgage.")
-
-    def play_turn(self):
-        """
-        Play a turn for the current player.
-        """
-        os.system("cls" if os.name == "nt" else "clear")
-        player = self.players[self.current_player_index]
-        print("-" * 20)
-        print(f"{player.name}'s turn")
-
-        self.move_player(player, self.roll_dice())
-        while True:
-            self.display_player_status(player)
-            action = input(
-                f"""Do you want to (B)uy {self.estates[player.position].name}
-                 for {self.estates[player.position].cost}, (T)rade, or (M)ortgage a property?
-                 (Enter to skip): """
-            ).upper()
-            if action == "B":
-                self.handle_buy(player)
-            elif action == "T":
-                self.handle_trade(player)
-            elif action == "M":
-                self.handle_mortgage(player)
-            elif action == "Win":
-                self.game_over = True
-            elif action == "":
-                break
-            else:
-                print(
-                    """Invalid action.
-                     Please choose (B)uy, (T)rade, (M)ortgage, or press Enter to skip."""
-                )
+    def end_turn(self):
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
+        self.dice_rolled = False
+        self.buttons[0]["enabled"] = True  # Enable "Roll Dice" button
+        self.buttons[1]["enabled"] = False  # Disable "Buy Property" button
+        self.buttons[2]["enabled"] = False  # Disable "Build House" button
+        self.update_board()
+
+    def draw_buttons(self):
+        for button in self.buttons:
+            color = (0, 0, 0) if button["enabled"] else (128, 128, 128)
+            pygame.draw.rect(self.screen, color, button["rect"])
+            text = self.font.render(button["label"], True, (255, 255, 255))
+
+            # Scale text to fit within the button if necessary
+            text_rect = text.get_rect()
+            if text_rect.width > button["rect"].width - 20:  # Add some padding
+                scale_factor = (button["rect"].width - 20) / text_rect.width
+                text = pygame.transform.scale(
+                    text,
+                    (
+                        int(text_rect.width * scale_factor),
+                        int(text_rect.height * scale_factor),
+                    ),
+                )
+                text_rect = text.get_rect()
+
+            text_rect.center = button["rect"].center
+            self.screen.blit(text, text_rect)
+
+    def draw_tokens(self):
+        color_offsets = {
+            "red": (0, 0),
+            "blue": (10, 0),
+            "green": (0, 10),
+            "yellow": (10, 10),
+        }
+
+        for player in self.players:
+            token_color = pygame.Color(player.color)
+            token_position = self.estates[player.position].position
+            offset = color_offsets.get(player.color, (0, 0))
+            adjusted_position = (
+                token_position[0] + offset[0],
+                token_position[1] + offset[1],
+            )
+            pygame.draw.circle(
+                self.screen, token_color, adjusted_position, 20
+            )  # Increased radius to 20
+
+    def update_board(self):
+        self.screen.blit(self.background, (0, 0))
+        self.draw_buttons()
+        self.draw_tokens()
+        self.draw_player_info()  # Draw player info below the buttons
+        if hasattr(self, "current_card") and self.current_card:
+            self.display_card(self.current_card)
+        pygame.display.flip()
+
+    def draw_setup_screen(self):
+        self.screen.fill((255, 255, 255))
+        if self.current_setup_step == 0:
+            prompt = "Enter the number of players:"
+        else:
+            prompt = f"Enter the name for player {self.current_setup_step}:"
+        text_surface = self.font.render(prompt, True, (0, 0, 0))
+        self.screen.blit(text_surface, (250, 250))
+        input_surface = self.font.render(self.input_text, True, (0, 0, 0))
+        self.screen.blit(input_surface, (self.input_box.x + 10, self.input_box.y + 10))
+        pygame.draw.rect(self.screen, (0, 0, 0), self.input_box, 2)
+        pygame.display.flip()
+
+    def handle_setup_event(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                if self.current_setup_step == 0:
+                    self.num_players = int(self.input_text)
+                    self.current_setup_step += 1
+                else:
+                    player_name = self.input_text
+                    player_color = self.token_colors[
+                        self.current_color_index % len(self.token_colors)
+                    ]
+                    self.players.append(Player(player_name, player_color))
+                    self.current_color_index += 1
+                    self.current_setup_step += 1
+                    if self.current_setup_step > self.num_players:
+                        self.setup_phase = False
+                self.input_text = ""
+            elif event.key == pygame.K_BACKSPACE:
+                self.input_text = self.input_text[:-1]
+            else:
+                self.input_text += event.unicode
+
+    def start_game(self):
+        while self.running:
+            if self.setup_phase:
+                self.draw_setup_screen()
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
+                    elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+                        self.handle_setup_event(event)
+            else:
+                self.update_board()
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        self.handle_click(event.pos)
+
+        pygame.quit()
 
 
 if __name__ == "__main__":
     game = Game()
-    NUM_PLAYERS = 0
-    while NUM_PLAYERS < 2 or NUM_PLAYERS > 5:
-        try:
-            NUM_PLAYERS = int(input("Enter the number of players (2-5): "))
-            if NUM_PLAYERS < 2 or NUM_PLAYERS > 5:
-                print("Please enter a number between 2 and 5.")
-        except ValueError:
-            print("Invalid input. Please enter a number between 2 and 5.")
-
-    for j in range(NUM_PLAYERS):
-        p_name = input(f"Enter the name for player {j + 1}: ")
-        game.add_player(p_name)
-    while True:
-        game.play_turn()
+    game.start_game()
