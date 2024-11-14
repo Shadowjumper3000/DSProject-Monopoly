@@ -9,7 +9,6 @@ from src.estate_management import initialize_estates
 from src.card_management import (
     create_chance_deck,
     create_community_chest_deck,
-    apply_effect,
 )
 from src.utils import wrap_text
 
@@ -50,14 +49,14 @@ class Game:
                 "label": "Mortgage",
                 "action": self.handle_mortgage,
                 "rect": pygame.Rect(860, 110, 120, 50),
-                "enabled": True,
+                "enabled": False,
             },
-            {
-                "label": "Trade",
-                "action": self.handle_trade,
-                "rect": pygame.Rect(730, 170, 120, 50),
-                "enabled": True,
-            },
+            # {
+            #     "label": "Trade",
+            #     "action": self.handle_trade,
+            #     "rect": pygame.Rect(730, 170, 120, 50),
+            #     "enabled": True,
+            # },
             {
                 "label": "End Turn",
                 "action": self.end_turn,
@@ -75,70 +74,69 @@ class Game:
         self.token_colors = ["red", "blue", "green", "yellow"]
         self.current_color_index = 0
         self.current_card = None
+        self.mortgage_popup_active = False
+        self.mortgage_popup_player = None
+
+    def mortgage_property(self, player, estate):
+        if estate.mortgage():
+            player.update_balance(estate.price // 2)
+            print(f"{player.name} mortgaged {estate.name} for ${estate.price // 2}")
+        else:
+            print(f"{player.name} could not mortgage {estate.name}")
 
     def move_to_nearest_utility(self, player):
-        """Move player to the nearest utility.
-        # !!! This method is not used in the current implementation.
-
-        Args:
-            player (Player): The player to move.
-        """
         utilities = ["Electric Company", "Water Works"]
         current_position = player.position
         nearest_utility = min(
             utilities,
-            key=lambda utility: (self.estates.index(utility) - current_position)
-            % len(self.estates),
+            key=lambda utility: (self.get_estate_position_by_name(utility) - current_position) % len(self.estates)
         )
         self.move_player_to(player, nearest_utility)
 
     def move_to_nearest_railroad(self, player):
-        """Move player to the nearest railroad.
-        # !!! This method is not used in the current implementation.
-
-        Args:
-            player (Player): The player to move.
-        """
-        railroads = [
-            "Kings Cross Station",
-            "Marylebone Station",
-            "Fenchurch St. Station",
-            "Liverpool St. Station",
-        ]
+        railroads = ["Kings Cross Station", "Marylebone Station", "Fenchurch St. Station", "Liverpool St. Station"]
         current_position = player.position
         nearest_railroad = min(
             railroads,
-            key=lambda railroad: (self.estates.index(railroad) - current_position)
-            % len(self.estates),
+            key=lambda railroad: (self.get_estate_position_by_name(railroad) - current_position) % len(self.estates)
         )
         self.move_player_to(player, nearest_railroad)
 
+    def get_estate_position_by_name(self, name):
+        for i, estate in enumerate(self.estates):
+            if estate.name == name:
+                return i
+        raise ValueError(f"Estate with name '{name}' not found")
+
     def move_player_to(self, player, location_name):
         """Move player to a specific location.
-        # TODO Update to pass the location object instead of the name.
 
         Args:
             player (Player): The player to move.
             location_name (str): The name of the location to move to.
         """
-        target_position = next(
-            i for i, estate in enumerate(self.estates) if estate.name == location_name
-        )
-        steps = (target_position - player.position) % len(self.estates)
-        self.move_player(player, steps)
+        try:
+            target_position = next(
+                i for i, estate in enumerate(self.estates) if estate.name == location_name
+            )
+            old_position = player.position
+            player.position = target_position
+            if player.position < old_position:
+                player.update_balance(200)
+                print(f"{player.name} passed Go and collected $200")
+            self.handle_estate(player)
+        except StopIteration:
+            print(f"Estate with name '{location_name}' not found")
 
     def draw_player_info(self):
-        """
-        Draw player information on the right side of the screen.
-        """
         current_player = self.players[self.current_player_index]
-        info_x = 705
+        info_x = 720
         info_y = 230  # Start below the buttons
         line_height = 30
 
         # Clear the area where player info is displayed
         pygame.draw.rect(self.screen, (255, 255, 255), (info_x, 10, 200, 20))
-        pygame.draw.rect(self.screen, (255, 255, 255), (info_x, info_y, 400, 600))
+        pygame.draw.rect(self.screen, (255, 255, 255), (info_x, info_y, 350, 600))
 
         # Draw current player name
         name_text = self.font.render(f"Player: {current_player.name}", True, (0, 0, 0))
@@ -146,9 +144,7 @@ class Game:
         info_y += line_height
 
         # Draw current player cash
-        cash_text = self.font.render(
-            f"Cash: ${current_player.balance}", True, (0, 0, 0)
-        )
+        cash_text = self.font.render(f"Cash: ${current_player.balance}", True, (0, 0, 0))
         self.screen.blit(cash_text, (info_x, info_y))
         info_y += line_height
 
@@ -172,13 +168,14 @@ class Game:
             "Community Chest": (0, 0, 255),
             "Chance": (255, 165, 0),
             "Tax": (128, 128, 128),
-            "Corner": (0, 0, 0),
+            "Corner": (0, 0, 0)
         }
 
-        for estate in current_player.properties:
-            estate_color = group_colors.get(
-                estate.group, (0, 0, 0)
-            )  # Default to black if group not found
+        for estate in current_player.estates:
+            if estate.mortgaged:
+                estate_color = (128, 128, 128)  # Grey color for mortgaged estates
+            else:
+                estate_color = group_colors.get(estate.group, (0, 0, 0))  # Default to black if group not found
             estate_text = self.font.render(f"- {estate.name}", True, estate_color)
             self.screen.blit(estate_text, (info_x, info_y))
             info_y += line_height
@@ -188,14 +185,10 @@ class Game:
         self.screen.blit(cards_text, (info_x, info_y))
         info_y += line_height
 
-        max_width = 250  # Maximum width for card text
-
         for card in current_player.community_chest_cards:
-            wrapped_lines = wrap_text(card.description, self.font, max_width)
-            for line in wrapped_lines:
-                card_text = self.font.render(line, True, (0, 0, 0))
-                self.screen.blit(card_text, (info_x, info_y))
-                info_y += line_height
+            card_text = self.font.render(f"- {card.description}", True, (0, 0, 0))
+            self.screen.blit(card_text, (info_x, info_y))
+            info_y += line_height
 
     def roll_dice(self):
         """
@@ -218,6 +211,13 @@ class Game:
             player (Player): The player to move.
             steps (int): The number of steps to move the player.
         """
+        if player.in_jail:
+            player.jail_turns += 1
+            if player.jail_turns >= 3:
+                player.get_out_of_jail()
+            else:
+                print(f"{player.name} is in jail and cannot move.")
+                return
         print(f"Before move: {player.name} is on position {player.position}")
         old_position = player.position
         player.position = (player.position + steps) % len(self.estates)
@@ -228,36 +228,31 @@ class Game:
         self.handle_estate(player)
 
     def handle_estate(self, player):
-        """
-        Handle the current estate the player is on.
-        Called after player moves to a new estate.
-
-        Args:
-            player (Player): The player whose turn it is.
-        """
         current_estate = self.estates[player.position]
         print(f"{player.name} is currently on {current_estate.name}")
         print(f"{player.name} has ${player.balance}")
         print(f"{player.name} currently owns:")
-        for estate in player.properties:
+        for estate in player.estates:
             status = "(Mortgaged)" if estate.mortgaged else ""
             print(f"  - {estate.name} {status}")
 
-        if current_estate.name == "Chance":
+        if current_estate.group == "Tax":
+            player.update_balance(-current_estate.price)
+            print(f"{player.name} paid ${current_estate.price} in taxes")
+        elif current_estate.name == "Chance":
             self.draw_chance_card(player)
         elif current_estate.name == "Community Chest":
             self.draw_community_chest_card(player)
-        elif current_estate.name == "Go To Jail":
-            player.go_to_jail()
-            print(f"{player.name} is going to jail")
-        elif current_estate.name == "Tax":
-            player.update_balance(-current_estate.rent)
-            print(f"{player.name} paid ${current_estate.rent} in taxes")
+        elif current_estate.owner is not None and current_estate.owner != player:
+            if not current_estate.pay_rent(player):
+                self.offer_mortgage(player)
         else:
-            if current_estate.owner is None:
+            if current_estate.buyable:
                 self.buttons[1]["enabled"] = True  # Enable "Buy Property" button
-            elif current_estate.owner == player:
-                self.buttons[2]["enabled"] = True  # Enable "Build House" button
+
+    def offer_mortgage(self, player):
+        print(f"{player.name} is offered to mortgage a property")
+        self.display_mortgage_popup(player)
 
     def handle_build_house(self):
         player = self.players[self.current_player_index]
@@ -292,13 +287,13 @@ class Game:
         card = self.chance_deck.draw_card()
         print(type(card))
         self.display_card(card)
-        apply_effect(player, self, card)
+        card.apply_effect(player, self)
         print(f"{player.name} drew a Chance card: {card.description}")
 
     def draw_community_chest_card(self, player):
         card = self.community_chest_deck.draw_card()
         self.display_card(card)
-        apply_effect(player, self, card)
+        card.apply_effect(player, self)
         print(f"{player.name} drew a Community Chest card: {card.description}")
 
     def handle_click(self, pos):
@@ -309,34 +304,195 @@ class Game:
                 self.update_board()
                 return
 
+        if hasattr(self, "mortgage_popup_active") and self.mortgage_popup_active:
+            popup_rect = pygame.Rect(200, 150, 300, 400)
+            button_height = 40
+            button_width = 260
+            button_margin = 10
+            button_y = popup_rect.y + 60
+
+            # Handle not mortgaged properties
+            button_y += button_height  # Skip the "Not Mortgaged" title
+            for estate in self.mortgage_popup_player.estates:
+                if not estate.mortgaged:
+                    button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+                    if button_rect.collidepoint(pos):
+                        self.mortgage_property(self.mortgage_popup_player, estate)
+                        self.mortgage_popup_active = False
+                        self.update_board()
+                        return
+                    button_y += button_height + button_margin
+
+            # Handle mortgaged properties
+            button_y += button_margin  # Add some space between the two categories
+            button_y += button_height  # Skip the "Mortgaged" title
+            for estate in self.mortgage_popup_player.estates:
+                if estate.mortgaged:
+                    button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+                    if button_rect.collidepoint(pos):
+                        self.unmortgage_property(self.mortgage_popup_player, estate)
+                        self.mortgage_popup_active = False
+                        self.update_board()
+                        return
+                    button_y += button_height + button_margin
+
         for button in self.buttons:
             if button["rect"].collidepoint(pos) and button["enabled"]:
                 button["action"]()
 
+    def unmortgage_property(self, player, estate):
+        if estate.unmortgage():
+            player.update_balance(-estate.price)
+            print(f"{player.name} unmortgaged {estate.name} for ${estate.price}")
+        else:
+            print(f"{player.name} could not unmortgage {estate.name}")
+
     def handle_buy(self):
         player = self.players[self.current_player_index]
         current_estate = self.estates[player.position]
-        if current_estate.owner is None:
+        if current_estate.buyable:
             if current_estate.buy_estate(player):
                 print(f"{player.name} bought {current_estate.name}")
             else:
                 print(f"{player.name} could not buy {current_estate.name}")
         self.buttons[1]["enabled"] = False  # Disable "Buy Property" button
+        self.update_buttons()
         self.update_board()
 
     def handle_trade(self, player):
-        pass
+        trade_partner = self.players[(self.current_player_index + 1) % len(self.players)]
+        current_estate = self.estates[player.position]
 
-    def handle_mortgage(self, player):
-        pass
+        if current_estate.owner == player:
+            # Create a Pygame input window for trade amount
+            trade_amount = self.get_trade_amount(f"Enter the amount of money to trade {current_estate.name} with {trade_partner.name}: ")
+            if trade_amount is not None and trade_partner.balance >= trade_amount:
+                if trade_amount is not None:
+                    trade_partner.update_balance(-trade_amount)
+                    player.update_balance(trade_amount)
+                    current_estate.owner = trade_partner
+                    player.estates.remove(current_estate)
+                    trade_partner.estates.append(current_estate)
+                    print(f"{player.name} traded {current_estate.name} with {trade_partner.name} for ${trade_amount}")
+                else:
+                    print("Invalid trade amount entered.")
+            else:
+                print(f"{trade_partner.name} does not have enough money to trade.")
+        else:
+            print(f"{player.name} does not own {current_estate.name}")
+        self.buttons[4]["enabled"] = False  # Disable "Trade" button
+
+    def get_trade_amount(self, prompt):
+        """
+        Display a Pygame input window to get the trade amount.
+        """
+        input_box = pygame.Rect(250, 300, 200, 50)
+        input_text = ""
+        active = True
+
+        while active:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    return None
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        active = False
+                    elif event.key == pygame.K_BACKSPACE:
+                        input_text = input_text[:-1]
+                    else:
+                        input_text += event.unicode
+
+            self.screen.fill((255, 255, 255))
+            prompt_surface = self.font.render(prompt, True, (0, 0, 0))
+            self.screen.blit(prompt_surface, (250, 250))
+            input_surface = self.font.render(input_text, True, (0, 0, 0))
+            self.screen.blit(input_surface, (input_box.x + 10, input_box.y + 10))
+            pygame.draw.rect(self.screen, (0, 0, 0), input_box, 2)
+            pygame.display.flip()
+
+        try:
+            return int(input_text)
+        except ValueError:
+            return None
+
+    def handle_mortgage(self):
+        player = self.players[self.current_player_index]
+        if not player.estates:
+            print(f"{player.name} has no properties to mortgage.")
+            return
+
+        self.display_mortgage_popup(player)
+
+    def display_mortgage_popup(self, player):
+        self.mortgage_popup_active = True
+        self.mortgage_popup_player = player
+
+        popup_rect = pygame.Rect(200, 150, 300, 400)  # Centered on the 700x700 board
+        pygame.draw.rect(self.screen, (255, 255, 255), popup_rect)
+        pygame.draw.rect(self.screen, (0, 0, 0), popup_rect, 2)
+
+        title_text = self.font.render("Mortgage Property", True, (0, 0, 0))
+        self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
+
+        button_height = 40
+        button_width = 260
+        button_margin = 10
+        button_y = popup_rect.y + 60
+
+        # Display not mortgaged properties
+        not_mortgaged_text = self.font.render("Not Mortgaged", True, (0, 0, 0))
+        self.screen.blit(not_mortgaged_text, (popup_rect.x + 20, button_y))
+        button_y += button_height
+
+        for estate in player.estates:
+            if not estate.mortgaged:
+                button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+                pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
+                pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
+                estate_text = self.font.render(estate.name, True, (0, 0, 0))
+                self.screen.blit(estate_text, (button_rect.x + 10, button_rect.y + 10))
+                button_y += button_height + button_margin
+
+        # Display mortgaged properties
+        button_y += button_margin  # Add some space between the two categories
+        mortgaged_text = self.font.render("Mortgaged", True, (0, 0, 0))
+        self.screen.blit(mortgaged_text, (popup_rect.x + 20, button_y))
+        button_y += button_height
+
+        for estate in player.estates:
+            if estate.mortgaged:
+                button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+                pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
+                pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
+                estate_text = self.font.render(estate.name, True, (0, 0, 0))
+                self.screen.blit(estate_text, (button_rect.x + 10, button_rect.y + 10))
+                button_y += button_height + button_margin
+
+        pygame.display.flip()
+
+    def handle_turn(self):
+        player = self.players[self.current_player_index]
+        if player.in_jail:
+            player.handle_jail_turn()
+            if not player.in_jail:
+                self.roll_dice()
+        else:
+            self.roll_dice()
 
     def end_turn(self):
+        print(f"Turn ended for {self.players[self.current_player_index].name}")
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         self.dice_rolled = False
         self.buttons[0]["enabled"] = True  # Enable "Roll Dice" button
         self.buttons[1]["enabled"] = False  # Disable "Buy Property" button
         self.buttons[2]["enabled"] = False  # Disable "Build House" button
+        self.update_buttons()
         self.update_board()
+
+    def update_buttons(self):
+        player = self.players[self.current_player_index]
+        self.buttons[3]["enabled"] = bool(player.estates)  # Enable "Mortgage" button only if player has properties
 
     def draw_buttons(self):
         for button in self.buttons:
@@ -385,8 +541,10 @@ class Game:
         self.draw_buttons()
         self.draw_tokens()
         self.draw_player_info()  # Draw player info below the buttons
-        if hasattr(self, "current_card") and self.current_card:
+        if hasattr(self, 'current_card') and self.current_card:
             self.display_card(self.current_card)
+        if hasattr(self, 'mortgage_popup_active') and self.mortgage_popup_active:
+            self.display_mortgage_popup(self.mortgage_popup_player)
         pygame.display.flip()
 
     def draw_setup_screen(self):

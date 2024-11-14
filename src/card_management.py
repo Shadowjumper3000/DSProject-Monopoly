@@ -24,61 +24,42 @@ class Card:
     def __str__(self):
         return self.description
 
+    def apply_effect(self, player, game,):
+        if self.value != 0:
+            player.update_balance(self.value * self.multiplier)
+            print(f"{player.name} {'received' if self.value > 0 else 'paid'} ${abs(self.value * self.multiplier)}")
 
-def apply_effect(player, game, card):
-    """
-    TODO Implement more cases
-    Apply the effect of the card to the player and the game
+        if self.is_get_out_of_jail:
+            player.get_out_of_jail_free = True
+            print(f"{player.name} received a Get Out of Jail Free self")
 
-    Args:
-        player (): _description_
-        game (_type_): _description_
-    """
-    if card.value != 0:
-        player.update_balance(card.value * card.multiplier)
-        print(
-            f"{player.name} {'received' if card.value > 0 else 'paid'} ${abs(card.value * card.multiplier)}"
-        )
+        if self.move_to:
+            if self.move_to == "nearest Utility":
+                game.move_to_nearest_utility(player)
+            elif self.move_to == "nearest Railroad":
+                game.move_to_nearest_railroad(player)
+            elif self.move_to == "back 3 spaces":
+                game.move_player(player, -3)
+            elif self.move_to == "Jail":
+                game.move_player_to_jail(player)
+            elif self.move_to == "Go":
+                game.move_player_to(player, 0)
+            else:
+                game.move_player_to(player, self.move_to)
 
-    if card.is_get_out_of_jail:
-        player.get_out_of_jail_free = True
-        print(f"{player.name} received a Get Out of Jail Free card")
+        if self.description == "You are assessed for street repairs: Pay $40 per house and $115 per hotel you own":
+            total_payment = player.get_total_repair_cost(40, 115)
+            player.update_balance(-total_payment)
+            print(f"{player.name} paid ${total_payment} for street repairs")
 
-    if card.move_to:
-        if card.move_to == "nearest Utility":
-            game.move_to_nearest_utility(player)
-        elif card.move_to == "nearest Railroad":
-            game.move_to_nearest_railroad(player)
-        elif card.move_to == "back 3 spaces":
-            game.move_player(player, -3)
-        elif card.move_to == "Jail":
-            game.move_player_to_jail(player)
-        elif card.move_to == "Go":
-            game.move_player_to(player, 0)
-        else:
-            game.move_player_to(player, card.move_to)
-
-    if (
-        card.description
-        == "You are assessed for street repairs: Pay $40 per house and $115 per hotel you own"
-    ):
-        total_payment = player.get_total_repair_cost(40, 115)
-        player.update_balance(-total_payment)
-        print(f"{player.name} paid ${total_payment} for street repairs")
-
-    if (
-        card.description
-        == "Grand Opera Night. Collect $50 from every player for opening night seats"
-    ):
-        total_collected = 0
-        for p in game.players:
-            if p != player:
-                p.update_balance(-50)
-                total_collected += 50
-        player.update_balance(total_collected)
-        print(
-            f"{player.name} collected ${total_collected} from other players for Grand Opera Night"
-        )
+        if self.description == "Grand Opera Night. Collect $50 from every player for opening night seats":
+            total_collected = 0
+            for p in game.players:
+                if p != player:
+                    p.update_balance(-50)
+                    total_collected += 50
+            player.update_balance(total_collected)
+            print(f"{player.name} collected ${total_collected} from other players for Grand Opera Night")
 
 
 class CardDeck:
