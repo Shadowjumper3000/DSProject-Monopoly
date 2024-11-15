@@ -51,12 +51,12 @@ class Game:
                 "rect": pygame.Rect(860, 110, 120, 50),
                 "enabled": False,
             },
-            # {
-            #     "label": "Trade",
-            #     "action": self.handle_trade,
-            #     "rect": pygame.Rect(730, 170, 120, 50),
-            #     "enabled": True,
-            # },
+            {
+                "label": "Trade",
+                "action": self.handle_trade,
+                "rect": pygame.Rect(730, 170, 120, 50),
+                "enabled": True,
+            },
             {
                 "label": "End Turn",
                 "action": self.end_turn,
@@ -76,6 +76,12 @@ class Game:
         self.current_card = None
         self.mortgage_popup_active = False
         self.mortgage_popup_player = None
+        self.trade_popup_active = False
+        self.trade_stage = None
+        self.trade_with_player = None
+        self.trade_property = None
+        self.trade_offer = ""
+        self.input_active = False
 
     def mortgage_property(self, player, estate):
         if estate.mortgage():
@@ -336,6 +342,19 @@ class Game:
                         return
                     button_y += button_height + button_margin
 
+        if self.trade_popup_active:
+            if self.trade_stage == 'select_player':
+                self.handle_select_player_click(pos)
+            elif self.trade_stage == 'select_property':
+                self.handle_select_property_click(pos)
+            elif self.trade_stage == 'enter_offer':
+                self.handle_enter_offer_click(pos)
+            elif self.trade_stage == 'confirm_trade':
+                self.handle_confirm_trade_click(pos)
+            else:
+                self.trade_popup_active = False
+            return  # Prevent other clicks from interfering
+
         for button in self.buttons:
             if button["rect"].collidepoint(pos) and button["enabled"]:
                 button["action"]()
@@ -359,62 +378,215 @@ class Game:
         self.update_buttons()
         self.update_board()
 
-    def handle_trade(self, player):
-        trade_partner = self.players[(self.current_player_index + 1) % len(self.players)]
-        current_estate = self.estates[player.position]
+    def handle_trade(self):
+        """Initiate the trading process."""
+        self.trade_popup_active = True
+        self.trade_stage = 'select_player'
+        self.trade_with_player = None
+        self.trade_property = None
+        self.trade_offer = ""
+        self.input_active = False
+        self.update_board()
 
-        if current_estate.owner == player:
-            # Create a Pygame input window for trade amount
-            trade_amount = self.get_trade_amount(f"Enter the amount of money to trade {current_estate.name} with {trade_partner.name}: ")
-            if trade_amount is not None and trade_partner.balance >= trade_amount:
-                if trade_amount is not None:
-                    trade_partner.update_balance(-trade_amount)
-                    player.update_balance(trade_amount)
-                    current_estate.owner = trade_partner
-                    player.estates.remove(current_estate)
-                    trade_partner.estates.append(current_estate)
-                    print(f"{player.name} traded {current_estate.name} with {trade_partner.name} for ${trade_amount}")
-                else:
-                    print("Invalid trade amount entered.")
-            else:
-                print(f"{trade_partner.name} does not have enough money to trade.")
-        else:
-            print(f"{player.name} does not own {current_estate.name}")
-        self.buttons[4]["enabled"] = False  # Disable "Trade" button
+    def display_trade_menu(self):
+        """Display the trading menu based on the current stage."""
+        popup_rect = pygame.Rect(150, 100, 700, 500)
+        pygame.draw.rect(self.screen, (255, 255, 255), popup_rect)
+        pygame.draw.rect(self.screen, (0, 0, 0), popup_rect, 2)
 
-    def get_trade_amount(self, prompt):
-        """
-        Display a Pygame input window to get the trade amount.
-        """
-        input_box = pygame.Rect(250, 300, 200, 50)
-        input_text = ""
-        active = True
+        if self.trade_stage == 'select_player':
+            title_text = self.font.render("Select a player to trade with:", True, (0, 0, 0))
+            self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
 
-        while active:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    return None
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_RETURN:
-                        active = False
-                    elif event.key == pygame.K_BACKSPACE:
-                        input_text = input_text[:-1]
-                    else:
-                        input_text += event.unicode
+            button_height = 50
+            button_width = 200
+            button_margin = 10
+            button_y = popup_rect.y + 80
 
-            self.screen.fill((255, 255, 255))
-            prompt_surface = self.font.render(prompt, True, (0, 0, 0))
-            self.screen.blit(prompt_surface, (250, 250))
-            input_surface = self.font.render(input_text, True, (0, 0, 0))
-            self.screen.blit(input_surface, (input_box.x + 10, input_box.y + 10))
+            current_player = self.players[self.current_player_index]
+            for player in self.players:
+                if player != current_player:
+                    button_rect = pygame.Rect(popup_rect.x + 250, button_y, button_width, button_height)
+                    pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
+                    pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
+                    player_text = self.font.render(player.name, True, (0, 0, 0))
+                    self.screen.blit(player_text, (button_rect.x + 10, button_rect.y + 10))
+                    button_y += button_height + button_margin
+
+        elif self.trade_stage == 'select_property':
+            if not self.trade_with_player.estates:
+                title_text = self.font.render(f"Player {self.trade_with_player.name} has no properties to trade.", True, (0, 0, 0))
+                self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
+                pygame.display.flip()
+                pygame.time.wait(2000)  # Display message for 2 seconds
+                self.trade_popup_active = False
+                self.update_board()
+                return
+
+            title_text = self.font.render(f"Select a property from {self.trade_with_player.name}:", True, (0, 0, 0))
+            self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
+
+            button_height = 40
+            button_width = 660
+            button_margin = 10
+            button_y = popup_rect.y + 80
+
+            for estate in self.trade_with_player.estates:
+                button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+                pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
+                pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
+                estate_text = self.font.render(f"{estate.name} (${estate.price})", True, (0, 0, 0))
+                self.screen.blit(estate_text, (button_rect.x + 10, button_rect.y + 5))
+                button_y += button_height + button_margin
+
+        elif self.trade_stage == 'enter_offer':
+            title_text = self.font.render(f"Enter your offer for {self.trade_property.name}:", True, (0, 0, 0))
+            self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
+
+            input_box = pygame.Rect(popup_rect.x + 250, popup_rect.y + 80, 200, 50)
+            pygame.draw.rect(self.screen, (255, 255, 255), input_box)
             pygame.draw.rect(self.screen, (0, 0, 0), input_box, 2)
-            pygame.display.flip()
+            offer_text = self.font.render(self.trade_offer, True, (0, 0, 0))
+            self.screen.blit(offer_text, (input_box.x + 10, input_box.y + 10))
 
-        try:
-            return int(input_text)
-        except ValueError:
-            return None
+            player = self.players[self.current_player_index]
+            is_valid_offer = self.trade_offer.isdigit() and int(self.trade_offer) <= player.balance and int(self.trade_offer) > 0
+
+            if not is_valid_offer and self.trade_offer:
+                error_text_line1 = self.font.render("Offer exceeds your balance or is invalid.", True, (200, 0, 0))
+                error_text_line2 = self.font.render("Please enter a valid amount.", True, (200, 0, 0))
+                self.screen.blit(error_text_line1, (popup_rect.x + 20, popup_rect.y + 220))
+                self.screen.blit(error_text_line2, (popup_rect.x + 20, popup_rect.y + 250))
+
+            if is_valid_offer:
+                submit_button = pygame.Rect(popup_rect.x + 300, popup_rect.y + 150, 100, 40)
+                pygame.draw.rect(self.screen, (0, 255, 0), submit_button)
+                pygame.draw.rect(self.screen, (0, 0, 0), submit_button, 2)
+                submit_text = self.font.render("Submit", True, (0, 0, 0))
+                self.screen.blit(submit_text, (submit_button.x + 10, submit_button.y + 5))
+
+        elif self.trade_stage == 'confirm_trade':
+            title_text = self.font.render(f"{self.trade_with_player.name}, do you accept the trade?", True, (0, 0, 0))
+            self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
+
+            details_text = self.font.render(
+                f"{self.players[self.current_player_index].name} offers ${self.trade_offer} for {self.trade_property.name}",
+                True, (0, 0, 0))
+            self.screen.blit(details_text, (popup_rect.x + 20, popup_rect.y + 80))
+
+            accept_button = pygame.Rect(popup_rect.x + 200, popup_rect.y + 150, 100, 40)
+            pygame.draw.rect(self.screen, (0, 255, 0), accept_button)
+            pygame.draw.rect(self.screen, (0, 0, 0), accept_button, 2)
+            accept_text = self.font.render("Accept", True, (0, 0, 0))
+            self.screen.blit(accept_text, (accept_button.x + 10, accept_button.y + 5))
+
+            decline_button = pygame.Rect(popup_rect.x + 400, popup_rect.y + 150, 100, 40)
+            pygame.draw.rect(self.screen, (255, 0, 0), decline_button)
+            pygame.draw.rect(self.screen, (0, 0, 0), decline_button, 2)
+            decline_text = self.font.render("Decline", True, (0, 0, 0))
+            self.screen.blit(decline_text, (decline_button.x + 10, decline_button.y + 5))
+
+        pygame.display.flip()
+
+    def handle_select_player_click(self, pos):
+        popup_rect = pygame.Rect(150, 100, 700, 500)
+        button_height = 50
+        button_width = 200
+        button_margin = 10
+        button_y = popup_rect.y + 80
+
+        current_player = self.players[self.current_player_index]
+        for player in self.players:
+            if player != current_player:
+                button_rect = pygame.Rect(popup_rect.x + 250, button_y, button_width, button_height)
+                if button_rect.collidepoint(pos):
+                    self.trade_with_player = player
+                    self.trade_stage = 'select_property'
+                    self.update_board()
+                    return
+                button_y += button_height + button_margin
+
+    def handle_select_property_click(self, pos):
+        popup_rect = pygame.Rect(150, 100, 700, 500)
+        button_height = 40
+        button_width = 660
+        button_margin = 10
+        button_y = popup_rect.y + 80
+
+        for estate in self.trade_with_player.estates:
+            button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+            if button_rect.collidepoint(pos):
+                self.trade_property = estate
+                self.trade_stage = 'enter_offer'
+                self.input_active = True
+                self.trade_offer = ""  # Reset offer when selecting a new property
+                self.update_board()
+                return
+            button_y += button_height + button_margin
+
+    def handle_enter_offer_click(self, pos):
+        popup_rect = pygame.Rect(150, 100, 700, 500)
+        input_box = pygame.Rect(popup_rect.x + 250, popup_rect.y + 80, 200, 50)
+        submit_button = pygame.Rect(popup_rect.x + 300, popup_rect.y + 150, 100, 40)
+
+        player = self.players[self.current_player_index]
+        is_valid_offer = self.trade_offer.isdigit() and int(self.trade_offer) <= player.balance and int(self.trade_offer) > 0
+
+        if input_box.collidepoint(pos):
+            self.input_active = True
+        elif is_valid_offer and submit_button.collidepoint(pos):
+            self.trade_stage = 'confirm_trade'
+            self.input_active = False
+            self.update_board()
+        else:
+            print("Invalid offer amount.")
+
+    def handle_confirm_trade_click(self, pos):
+        popup_rect = pygame.Rect(150, 100, 700, 500)
+        accept_button = pygame.Rect(popup_rect.x + 200, popup_rect.y + 150, 100, 40)
+        decline_button = pygame.Rect(popup_rect.x + 400, popup_rect.y + 150, 100, 40)
+
+        if accept_button.collidepoint(pos):
+            offer_amount = int(self.trade_offer)
+            buyer = self.players[self.current_player_index]
+            seller = self.trade_with_player
+
+            if buyer.balance >= offer_amount:
+                buyer.update_balance(-offer_amount)
+                seller.update_balance(offer_amount)
+                seller.estates.remove(self.trade_property)
+                buyer.estates.append(self.trade_property)
+                self.trade_property.owner = buyer
+                print(f"{seller.name} sold {self.trade_property.name} to {buyer.name} for ${offer_amount}")
+            else:
+                print(f"{buyer.name} does not have enough money.")
+            self.trade_popup_active = False
+            self.update_board()
+
+        elif decline_button.collidepoint(pos):
+            print(f"{self.trade_with_player.name} declined the trade.")
+            self.trade_popup_active = False
+            self.update_board()
+
+    def handle_keydown(self, event):
+        if self.trade_popup_active and self.trade_stage == 'enter_offer' and self.input_active:
+            if event.key == pygame.K_RETURN:
+                if self.trade_offer.isdigit() and int(self.trade_offer) > 0:
+                    self.trade_stage = 'confirm_trade'
+                    self.input_active = False
+                    self.update_board()
+                else:
+                    print("Invalid offer amount.")
+            elif event.key == pygame.K_BACKSPACE:
+                self.trade_offer = self.trade_offer[:-1]
+                self.update_board()
+            else:
+                if event.unicode.isdigit():
+                    self.trade_offer += event.unicode
+                    self.update_board()
+        else:
+            # ...handle other key events...
+            pass
 
     def handle_mortgage(self):
         player = self.players[self.current_player_index]
@@ -535,15 +707,16 @@ class Game:
             pygame.draw.circle(
                 self.screen, token_color, adjusted_position, 20
             )  # Increased radius to 20
-
     def update_board(self):
         self.screen.blit(self.background, (0, 0))
         self.draw_buttons()
         self.draw_tokens()
-        self.draw_player_info()  # Draw player info below the buttons
-        if hasattr(self, 'current_card') and self.current_card:
+        self.draw_player_info()
+        if self.trade_popup_active:
+            self.display_trade_menu()
+        elif hasattr(self, 'current_card') and self.current_card:
             self.display_card(self.current_card)
-        if hasattr(self, 'mortgage_popup_active') and self.mortgage_popup_active:
+        elif hasattr(self, 'mortgage_popup_active') and self.mortgage_popup_active:
             self.display_mortgage_popup(self.mortgage_popup_player)
         pygame.display.flip()
 
@@ -598,6 +771,8 @@ class Game:
                         self.running = False
                     elif event.type == pygame.MOUSEBUTTONDOWN:
                         self.handle_click(event.pos)
+                    elif event.type == pygame.KEYDOWN:
+                        self.handle_keydown(event)
 
         pygame.quit()
 
