@@ -102,11 +102,28 @@ class Game:
         )
         self.move_player_to(player, nearest_railroad)
 
+    def go_to_jail(self, player):
+        player.position = self.get_estate_position_by_name("Jail")
+        player.in_jail = True
+        player.jail_turns = 0
+
+    def get_out_of_jail(self, player):
+        player.in_jail = False
+        player.jail_turns = 0
+
+    def handle_jail_turn(self, player):
+        if player.in_jail:
+            player.jail_turns += 1
+            if player.jail_turns >= 3:
+                self.get_out_of_jail(player)
+                print(f"{player.name} is released from jail after 3 turns")
+            else:
+                print(f"{player.name} is in jail for {player.jail_turns} turns")
+
     def get_estate_position_by_name(self, name):
-        for i, estate in enumerate(self.estates):
-            if estate.name == name:
-                return i
-        raise ValueError(f"Estate with name '{name}' not found")
+        return next(
+            i for i, estate in enumerate(self.estates) if estate.name == name
+        )
 
     def move_player_to(self, player, location_name):
         """Move player to a specific location.
@@ -165,10 +182,6 @@ class Game:
             "Dark Blue": (0, 0, 139),
             "Utility": (192, 192, 192),
             "Station": (0, 0, 0),
-            "Community Chest": (0, 0, 255),
-            "Chance": (255, 165, 0),
-            "Tax": (128, 128, 128),
-            "Corner": (0, 0, 0)
         }
 
         for estate in current_player.estates:
@@ -243,6 +256,8 @@ class Game:
             self.draw_chance_card(player)
         elif current_estate.name == "Community Chest":
             self.draw_community_chest_card(player)
+        elif current_estate.name == "Go To Jail":
+            self.go_to_jail(player)
         elif current_estate.owner is not None and current_estate.owner != player:
             if not current_estate.pay_rent(player):
                 self.offer_mortgage(player)
@@ -260,13 +275,32 @@ class Game:
         if current_estate.owner == player:
             if current_estate.build_house():
                 print(f"{player.name} built a house on {current_estate.name}")
+                self.display_message(f"{player.name} built a house on {current_estate.name}")
             else:
                 print(f"{player.name} cannot build a house on {current_estate.name}")
+                self.display_message(f"{player.name} cannot build a house on {current_estate.name}")
         self.buttons[2]["enabled"] = False  # Disable "Build House" button
+
+    def display_message(self, message):
+        message_rect = pygame.Rect(200, 250, 600, 100)  # Centered on the screen
+        pygame.draw.rect(self.screen, (255, 255, 255), message_rect)
+        pygame.draw.rect(self.screen, (0, 0, 0), message_rect, 2)
+
+        wrapped_lines = wrap_text(message, self.font, message_rect.width - 20)
+        text_y = message_rect.y + 10
+
+        for line in wrapped_lines:
+            message_text = self.font.render(line, True, (0, 0, 0))
+            self.screen.blit(message_text, (message_rect.x + 10, text_y))
+            text_y += self.font.get_linesize()
+
+        pygame.display.flip()
+        pygame.time.wait(2000)  # Display the message for 2 seconds
+        self.update_board()
 
     def display_card(self, card):
         self.current_card = card
-        card_rect = pygame.Rect(200, 250, 300, 200)  # Centered on the 700x700 board
+        card_rect = pygame.Rect(200, 220, 300, 300)  # Centered on the 700x700 board
         pygame.draw.rect(self.screen, (255, 255, 255), card_rect)
         pygame.draw.rect(self.screen, (0, 0, 0), card_rect, 2)
 

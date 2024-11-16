@@ -32,31 +32,22 @@ class Player:
             print(f"{self.name} does not have enough money to buy {estate.name}")
 
     def insert_estate_sorted(self, estate):
-        # Use insertion sort to insert the estate in the correct position
+        # Use insertion sort to insert the estate in the correct position based on index
         self.estates.append(estate)
         i = len(self.estates) - 1
-        while i > 0 and self.estates[i - 1].name > estate.name:
+        while i > 0 and self.estates[i - 1].index > estate.index:
             self.estates[i] = self.estates[i - 1]
             i -= 1
         self.estates[i] = estate
 
-    def go_to_jail(self, game):
-        self.position = game.get_estate_position_by_name("Jail")
-        self.in_jail = True
-        self.jail_turns = 0
-
-    def get_out_of_jail(self):
-        self.in_jail = False
-        self.jail_turns = 0
-
-    def handle_jail_turn(self):
-        if self.in_jail:
-            self.jail_turns += 1
-            if self.jail_turns >= 3:
-                self.get_out_of_jail()
-                print(f"{self.name} is released from jail after 3 turns")
+    def get_total_repair_cost(self, house_cost, hotel_cost):
+        total_cost = 0
+        for estate in self.estates:
+            if estate.hotel:
+                total_cost += hotel_cost
             else:
-                print(f"{self.name} is in jail for {self.jail_turns} turns")
+                total_cost += estate.houses * house_cost
+        return total_cost
 
     def __str__(self):
         return f"Player {self.name}: Position {self.position}, Balance {self.balance}, Properties {len(self.estates)}, In Jail {self.in_jail}"

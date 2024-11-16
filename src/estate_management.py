@@ -17,7 +17,7 @@ class Estate:
                 player.balance -= self.price
                 self.owner = player
                 self.buyable = False
-                player.estates.append(self)
+                player.insert_estate_sorted(self)
                 return True
             else:
                 return False
