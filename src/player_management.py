@@ -7,6 +7,7 @@ class Player:
     """
     Player class to manage player information and actions
     """
+
     def __init__(self, name, color, initial_balance=1500):
         self.name = name
         self.color = color

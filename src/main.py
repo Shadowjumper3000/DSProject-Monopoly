@@ -95,16 +95,27 @@ class Game:
         current_position = player.position
         nearest_utility = min(
             utilities,
-            key=lambda utility: (self.get_estate_position_by_name(utility) - current_position) % len(self.estates)
+            key=lambda utility: (
+                self.get_estate_position_by_name(utility) - current_position
+            )
+            % len(self.estates),
         )
         self.move_player_to(player, nearest_utility)
 
     def move_to_nearest_railroad(self, player):
-        railroads = ["Kings Cross Station", "Marylebone Station", "Fenchurch St. Station", "Liverpool St. Station"]
+        railroads = [
+            "Kings Cross Station",
+            "Marylebone Station",
+            "Fenchurch St. Station",
+            "Liverpool St. Station",
+        ]
         current_position = player.position
         nearest_railroad = min(
             railroads,
-            key=lambda railroad: (self.get_estate_position_by_name(railroad) - current_position) % len(self.estates)
+            key=lambda railroad: (
+                self.get_estate_position_by_name(railroad) - current_position
+            )
+            % len(self.estates),
         )
         self.move_player_to(player, nearest_railroad)
 
@@ -127,9 +138,7 @@ class Game:
                 print(f"{player.name} is in jail for {player.jail_turns} turns")
 
     def get_estate_position_by_name(self, name):
-        return next(
-            i for i, estate in enumerate(self.estates) if estate.name == name
-        )
+        return next(i for i, estate in enumerate(self.estates) if estate.name == name)
 
     def move_player_to(self, player, location_name):
         """Move player to a specific location.
@@ -140,7 +149,9 @@ class Game:
         """
         try:
             target_position = next(
-                i for i, estate in enumerate(self.estates) if estate.name == location_name
+                i
+                for i, estate in enumerate(self.estates)
+                if estate.name == location_name
             )
             old_position = player.position
             player.position = target_position
@@ -167,7 +178,9 @@ class Game:
         info_y += line_height
 
         # Draw current player cash
-        cash_text = self.font.render(f"Cash: ${current_player.balance}", True, (0, 0, 0))
+        cash_text = self.font.render(
+            f"Cash: ${current_player.balance}", True, (0, 0, 0)
+        )
         self.screen.blit(cash_text, (info_x, info_y))
         info_y += line_height
 
@@ -194,7 +207,9 @@ class Game:
             if estate.mortgaged:
                 estate_color = (128, 128, 128)  # Grey color for mortgaged estates
             else:
-                estate_color = group_colors.get(estate.group, (0, 0, 0))  # Default to black if group not found
+                estate_color = group_colors.get(
+                    estate.group, (0, 0, 0)
+                )  # Default to black if group not found
             estate_text = self.font.render(f"- {estate.name}", True, estate_color)
             self.screen.blit(estate_text, (info_x, info_y))
             info_y += line_height
@@ -281,10 +296,14 @@ class Game:
         if current_estate.owner == player:
             if current_estate.build_house():
                 print(f"{player.name} built a house on {current_estate.name}")
-                self.display_message(f"{player.name} built a house on {current_estate.name}")
+                self.display_message(
+                    f"{player.name} built a house on {current_estate.name}"
+                )
             else:
                 print(f"{player.name} cannot build a house on {current_estate.name}")
-                self.display_message(f"{player.name} cannot build a house on {current_estate.name}")
+                self.display_message(
+                    f"{player.name} cannot build a house on {current_estate.name}"
+                )
         self.buttons[2]["enabled"] = False  # Disable "Build House" button
 
     def display_message(self, message):
@@ -355,7 +374,9 @@ class Game:
             button_y += button_height  # Skip the "Not Mortgaged" title
             for estate in self.mortgage_popup_player.estates:
                 if not estate.mortgaged:
-                    button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+                    button_rect = pygame.Rect(
+                        popup_rect.x + 20, button_y, button_width, button_height
+                    )
                     if button_rect.collidepoint(pos):
                         self.mortgage_property(self.mortgage_popup_player, estate)
                         self.mortgage_popup_active = False
@@ -368,7 +389,9 @@ class Game:
             button_y += button_height  # Skip the "Mortgaged" title
             for estate in self.mortgage_popup_player.estates:
                 if estate.mortgaged:
-                    button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+                    button_rect = pygame.Rect(
+                        popup_rect.x + 20, button_y, button_width, button_height
+                    )
                     if button_rect.collidepoint(pos):
                         self.unmortgage_property(self.mortgage_popup_player, estate)
                         self.mortgage_popup_active = False
@@ -377,13 +400,13 @@ class Game:
                     button_y += button_height + button_margin
 
         if self.trade_popup_active:
-            if self.trade_stage == 'select_player':
+            if self.trade_stage == "select_player":
                 self.handle_select_player_click(pos)
-            elif self.trade_stage == 'select_property':
+            elif self.trade_stage == "select_property":
                 self.handle_select_property_click(pos)
-            elif self.trade_stage == 'enter_offer':
+            elif self.trade_stage == "enter_offer":
                 self.handle_enter_offer_click(pos)
-            elif self.trade_stage == 'confirm_trade':
+            elif self.trade_stage == "confirm_trade":
                 self.handle_confirm_trade_click(pos)
             else:
                 self.trade_popup_active = False
@@ -415,7 +438,7 @@ class Game:
     def handle_trade(self):
         """Initiate the trading process."""
         self.trade_popup_active = True
-        self.trade_stage = 'select_player'
+        self.trade_stage = "select_player"
         self.trade_with_player = None
         self.trade_property = None
         self.trade_offer = ""
@@ -428,8 +451,10 @@ class Game:
         pygame.draw.rect(self.screen, (255, 255, 255), popup_rect)
         pygame.draw.rect(self.screen, (0, 0, 0), popup_rect, 2)
 
-        if self.trade_stage == 'select_player':
-            title_text = self.font.render("Select a player to trade with:", True, (0, 0, 0))
+        if self.trade_stage == "select_player":
+            title_text = self.font.render(
+                "Select a player to trade with:", True, (0, 0, 0)
+            )
             self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
 
             button_height = 50
@@ -440,16 +465,24 @@ class Game:
             current_player = self.players[self.current_player_index]
             for player in self.players:
                 if player != current_player:
-                    button_rect = pygame.Rect(popup_rect.x + 250, button_y, button_width, button_height)
+                    button_rect = pygame.Rect(
+                        popup_rect.x + 250, button_y, button_width, button_height
+                    )
                     pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
                     pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
                     player_text = self.font.render(player.name, True, (0, 0, 0))
-                    self.screen.blit(player_text, (button_rect.x + 10, button_rect.y + 10))
+                    self.screen.blit(
+                        player_text, (button_rect.x + 10, button_rect.y + 10)
+                    )
                     button_y += button_height + button_margin
 
-        elif self.trade_stage == 'select_property':
+        elif self.trade_stage == "select_property":
             if not self.trade_with_player.estates:
-                title_text = self.font.render(f"Player {self.trade_with_player.name} has no properties to trade.", True, (0, 0, 0))
+                title_text = self.font.render(
+                    f"Player {self.trade_with_player.name} has no properties to trade.",
+                    True,
+                    (0, 0, 0),
+                )
                 self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
                 pygame.display.flip()
                 pygame.time.wait(2000)  # Display message for 2 seconds
@@ -457,7 +490,11 @@ class Game:
                 self.update_board()
                 return
 
-            title_text = self.font.render(f"Select a property from {self.trade_with_player.name}:", True, (0, 0, 0))
+            title_text = self.font.render(
+                f"Select a property from {self.trade_with_player.name}:",
+                True,
+                (0, 0, 0),
+            )
             self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
 
             button_height = 40
@@ -466,15 +503,21 @@ class Game:
             button_y = popup_rect.y + 80
 
             for estate in self.trade_with_player.estates:
-                button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+                button_rect = pygame.Rect(
+                    popup_rect.x + 20, button_y, button_width, button_height
+                )
                 pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
                 pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
-                estate_text = self.font.render(f"{estate.name} (${estate.price})", True, (0, 0, 0))
+                estate_text = self.font.render(
+                    f"{estate.name} (${estate.price})", True, (0, 0, 0)
+                )
                 self.screen.blit(estate_text, (button_rect.x + 10, button_rect.y + 5))
                 button_y += button_height + button_margin
 
-        elif self.trade_stage == 'enter_offer':
-            title_text = self.font.render(f"Enter your offer for {self.trade_property.name}:", True, (0, 0, 0))
+        elif self.trade_stage == "enter_offer":
+            title_text = self.font.render(
+                f"Enter your offer for {self.trade_property.name}:", True, (0, 0, 0)
+            )
             self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
 
             input_box = pygame.Rect(popup_rect.x + 250, popup_rect.y + 80, 200, 50)
@@ -484,28 +527,50 @@ class Game:
             self.screen.blit(offer_text, (input_box.x + 10, input_box.y + 10))
 
             player = self.players[self.current_player_index]
-            is_valid_offer = self.trade_offer.isdigit() and int(self.trade_offer) <= player.balance and int(self.trade_offer) > 0
+            is_valid_offer = (
+                self.trade_offer.isdigit()
+                and int(self.trade_offer) <= player.balance
+                and int(self.trade_offer) > 0
+            )
 
             if not is_valid_offer and self.trade_offer:
-                error_text_line1 = self.font.render("Offer exceeds your balance or is invalid.", True, (200, 0, 0))
-                error_text_line2 = self.font.render("Please enter a valid amount.", True, (200, 0, 0))
-                self.screen.blit(error_text_line1, (popup_rect.x + 20, popup_rect.y + 220))
-                self.screen.blit(error_text_line2, (popup_rect.x + 20, popup_rect.y + 250))
+                error_text_line1 = self.font.render(
+                    "Offer exceeds your balance or is invalid.", True, (200, 0, 0)
+                )
+                error_text_line2 = self.font.render(
+                    "Please enter a valid amount.", True, (200, 0, 0)
+                )
+                self.screen.blit(
+                    error_text_line1, (popup_rect.x + 20, popup_rect.y + 220)
+                )
+                self.screen.blit(
+                    error_text_line2, (popup_rect.x + 20, popup_rect.y + 250)
+                )
 
             if is_valid_offer:
-                submit_button = pygame.Rect(popup_rect.x + 300, popup_rect.y + 150, 100, 40)
+                submit_button = pygame.Rect(
+                    popup_rect.x + 300, popup_rect.y + 150, 100, 40
+                )
                 pygame.draw.rect(self.screen, (0, 255, 0), submit_button)
                 pygame.draw.rect(self.screen, (0, 0, 0), submit_button, 2)
                 submit_text = self.font.render("Submit", True, (0, 0, 0))
-                self.screen.blit(submit_text, (submit_button.x + 10, submit_button.y + 5))
+                self.screen.blit(
+                    submit_text, (submit_button.x + 10, submit_button.y + 5)
+                )
 
-        elif self.trade_stage == 'confirm_trade':
-            title_text = self.font.render(f"{self.trade_with_player.name}, do you accept the trade?", True, (0, 0, 0))
+        elif self.trade_stage == "confirm_trade":
+            title_text = self.font.render(
+                f"{self.trade_with_player.name}, do you accept the trade?",
+                True,
+                (0, 0, 0),
+            )
             self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
 
             details_text = self.font.render(
                 f"{self.players[self.current_player_index].name} offers ${self.trade_offer} for {self.trade_property.name}",
-                True, (0, 0, 0))
+                True,
+                (0, 0, 0),
+            )
             self.screen.blit(details_text, (popup_rect.x + 20, popup_rect.y + 80))
 
             accept_button = pygame.Rect(popup_rect.x + 200, popup_rect.y + 150, 100, 40)
@@ -514,11 +579,15 @@ class Game:
             accept_text = self.font.render("Accept", True, (0, 0, 0))
             self.screen.blit(accept_text, (accept_button.x + 10, accept_button.y + 5))
 
-            decline_button = pygame.Rect(popup_rect.x + 400, popup_rect.y + 150, 100, 40)
+            decline_button = pygame.Rect(
+                popup_rect.x + 400, popup_rect.y + 150, 100, 40
+            )
             pygame.draw.rect(self.screen, (255, 0, 0), decline_button)
             pygame.draw.rect(self.screen, (0, 0, 0), decline_button, 2)
             decline_text = self.font.render("Decline", True, (0, 0, 0))
-            self.screen.blit(decline_text, (decline_button.x + 10, decline_button.y + 5))
+            self.screen.blit(
+                decline_text, (decline_button.x + 10, decline_button.y + 5)
+            )
 
         pygame.display.flip()
 
@@ -532,10 +601,12 @@ class Game:
         current_player = self.players[self.current_player_index]
         for player in self.players:
             if player != current_player:
-                button_rect = pygame.Rect(popup_rect.x + 250, button_y, button_width, button_height)
+                button_rect = pygame.Rect(
+                    popup_rect.x + 250, button_y, button_width, button_height
+                )
                 if button_rect.collidepoint(pos):
                     self.trade_with_player = player
-                    self.trade_stage = 'select_property'
+                    self.trade_stage = "select_property"
                     self.update_board()
                     return
                 button_y += button_height + button_margin
@@ -548,10 +619,12 @@ class Game:
         button_y = popup_rect.y + 80
 
         for estate in self.trade_with_player.estates:
-            button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+            button_rect = pygame.Rect(
+                popup_rect.x + 20, button_y, button_width, button_height
+            )
             if button_rect.collidepoint(pos):
                 self.trade_property = estate
-                self.trade_stage = 'enter_offer'
+                self.trade_stage = "enter_offer"
                 self.input_active = True
                 self.trade_offer = ""  # Reset offer when selecting a new property
                 self.update_board()
@@ -564,12 +637,16 @@ class Game:
         submit_button = pygame.Rect(popup_rect.x + 300, popup_rect.y + 150, 100, 40)
 
         player = self.players[self.current_player_index]
-        is_valid_offer = self.trade_offer.isdigit() and int(self.trade_offer) <= player.balance and int(self.trade_offer) > 0
+        is_valid_offer = (
+            self.trade_offer.isdigit()
+            and int(self.trade_offer) <= player.balance
+            and int(self.trade_offer) > 0
+        )
 
         if input_box.collidepoint(pos):
             self.input_active = True
         elif is_valid_offer and submit_button.collidepoint(pos):
-            self.trade_stage = 'confirm_trade'
+            self.trade_stage = "confirm_trade"
             self.input_active = False
             self.update_board()
         else:
@@ -591,7 +668,9 @@ class Game:
                 seller.estates.remove(self.trade_property)
                 buyer.estates.append(self.trade_property)
                 self.trade_property.owner = buyer
-                print(f"{seller.name} sold {self.trade_property.name} to {buyer.name} for ${offer_amount}")
+                print(
+                    f"{seller.name} sold {self.trade_property.name} to {buyer.name} for ${offer_amount}"
+                )
             else:
                 print(f"{buyer.name} does not have enough money.")
             self.trade_popup_active = False
@@ -603,10 +682,14 @@ class Game:
             self.update_board()
 
     def handle_keydown(self, event):
-        if self.trade_popup_active and self.trade_stage == 'enter_offer' and self.input_active:
+        if (
+            self.trade_popup_active
+            and self.trade_stage == "enter_offer"
+            and self.input_active
+        ):
             if event.key == pygame.K_RETURN:
                 if self.trade_offer.isdigit() and int(self.trade_offer) > 0:
-                    self.trade_stage = 'confirm_trade'
+                    self.trade_stage = "confirm_trade"
                     self.input_active = False
                     self.update_board()
                 else:
@@ -653,7 +736,9 @@ class Game:
 
         for estate in player.estates:
             if not estate.mortgaged:
-                button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+                button_rect = pygame.Rect(
+                    popup_rect.x + 20, button_y, button_width, button_height
+                )
                 pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
                 pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
                 estate_text = self.font.render(estate.name, True, (0, 0, 0))
@@ -668,7 +753,9 @@ class Game:
 
         for estate in player.estates:
             if estate.mortgaged:
-                button_rect = pygame.Rect(popup_rect.x + 20, button_y, button_width, button_height)
+                button_rect = pygame.Rect(
+                    popup_rect.x + 20, button_y, button_width, button_height
+                )
                 pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
                 pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
                 estate_text = self.font.render(estate.name, True, (0, 0, 0))
@@ -698,7 +785,9 @@ class Game:
 
     def update_buttons(self):
         player = self.players[self.current_player_index]
-        self.buttons[3]["enabled"] = bool(player.estates)  # Enable "Mortgage" button only if player has properties
+        self.buttons[3]["enabled"] = bool(
+            player.estates
+        )  # Enable "Mortgage" button only if player has properties
 
     def draw_buttons(self):
         for button in self.buttons:
@@ -741,6 +830,7 @@ class Game:
             pygame.draw.circle(
                 self.screen, token_color, adjusted_position, 20
             )  # Increased radius to 20
+
     def update_board(self):
         self.screen.blit(self.background, (0, 0))
         self.draw_buttons()
@@ -748,9 +838,9 @@ class Game:
         self.draw_player_info()
         if self.trade_popup_active:
             self.display_trade_menu()
-        elif hasattr(self, 'current_card') and self.current_card:
+        elif hasattr(self, "current_card") and self.current_card:
             self.display_card(self.current_card)
-        elif hasattr(self, 'mortgage_popup_active') and self.mortgage_popup_active:
+        elif hasattr(self, "mortgage_popup_active") and self.mortgage_popup_active:
             self.display_mortgage_popup(self.mortgage_popup_player)
         pygame.display.flip()
 
