@@ -30,38 +30,38 @@ class Game:
             {
                 "label": "Roll Dice",
                 "action": self.roll_dice,
-                "rect": pygame.Rect(730, 50, 120, 50),
+                "rect": pygame.Rect(730, 20, 120, 50),
                 "enabled": True,
             },
             {
                 "label": "Buy Property",
                 "action": self.handle_buy,
-                "rect": pygame.Rect(860, 50, 120, 50),
+                "rect": pygame.Rect(860, 20, 120, 50),
                 "enabled": False,
             },
             {
                 "label": "Build House",
                 "action": self.handle_build_house,
-                "rect": pygame.Rect(730, 110, 120, 50),
+                "rect": pygame.Rect(730, 80, 120, 50),
                 "enabled": False,
             },
             {
                 "label": "Mortgage",
                 "action": self.handle_mortgage,
-                "rect": pygame.Rect(860, 110, 120, 50),
+                "rect": pygame.Rect(860, 80, 120, 50),
                 "enabled": False,
             },
             {
                 "label": "Trade",
                 "action": self.handle_trade,
-                "rect": pygame.Rect(730, 170, 120, 50),
+                "rect": pygame.Rect(730, 140, 120, 50),
                 "enabled": True,
             },
             {
                 "label": "End Turn",
                 "action": self.end_turn,
-                "rect": pygame.Rect(860, 170, 120, 50),
-                "enabled": True,
+                "rect": pygame.Rect(860, 140, 120, 50),
+                "enabled": False,
             },
         ]
         self.buttons[0]["enabled"] = True  # Enable "Roll Dice" button
@@ -165,16 +165,18 @@ class Game:
     def draw_player_info(self):
         current_player = self.players[self.current_player_index]
         info_x = 720
-        info_y = 230  # Start below the buttons
+        info_y = 230  # Start at the top of the right side
         line_height = 30
 
-        # Clear the area where player info is displayed
-        pygame.draw.rect(self.screen, (255, 255, 255), (info_x, 10, 200, 20))
-        pygame.draw.rect(self.screen, (255, 255, 255), (info_x, info_y, 350, 600))
+        # Clear the entire right side of the board
+        pygame.draw.rect(self.screen, (255, 255, 255), (info_x, 0, 280, 700))
+
+        # Draw buttons
+        self.draw_buttons()
 
         # Draw current player name
         name_text = self.font.render(f"Player: {current_player.name}", True, (0, 0, 0))
-        self.screen.blit(name_text, (info_x, 10))  # Display at the top right
+        self.screen.blit(name_text, (info_x, info_y))
         info_y += line_height
 
         # Draw current player cash
@@ -201,15 +203,18 @@ class Game:
             "Dark Blue": (0, 0, 139),
             "Utility": (192, 192, 192),
             "Station": (0, 0, 0),
+            "Community Chest": (0, 0, 255),
+            "Chance": (255, 165, 0),
+            "Tax": (128, 128, 128),
+            "Corner": (0, 0, 0),
         }
 
         for estate in current_player.estates:
-            if estate.mortgaged:
-                estate_color = (128, 128, 128)  # Grey color for mortgaged estates
-            else:
-                estate_color = group_colors.get(
-                    estate.group, (0, 0, 0)
-                )  # Default to black if group not found
+            estate_color = (
+                (128, 128, 128)
+                if estate.mortgaged
+                else group_colors.get(estate.group, (0, 0, 0))
+            )
             estate_text = self.font.render(f"- {estate.name}", True, estate_color)
             self.screen.blit(estate_text, (info_x, info_y))
             info_y += line_height
@@ -225,15 +230,13 @@ class Game:
             info_y += line_height
 
     def roll_dice(self):
-        """
-        Roll the dice and move the current player.
-        """
         if not self.dice_rolled:
             dice_roll = random.randint(1, 6) + random.randint(1, 6)
             print(f"Dice rolled: {dice_roll}")
             self.move_player(self.players[self.current_player_index], dice_roll)
             self.dice_rolled = True
             self.buttons[0]["enabled"] = False  # Disable "Roll Dice" button
+            self.buttons[5]["enabled"] = True  # Enable "End Turn" button
         else:
             print("You have already rolled the dice this turn.")
 
@@ -365,6 +368,11 @@ class Game:
 
         if hasattr(self, "mortgage_popup_active") and self.mortgage_popup_active:
             popup_rect = pygame.Rect(200, 150, 300, 400)
+            if not popup_rect.collidepoint(pos):
+                self.mortgage_popup_active = False
+                self.update_board()
+                return
+
             button_height = 40
             button_width = 260
             button_margin = 10
@@ -398,19 +406,6 @@ class Game:
                         self.update_board()
                         return
                     button_y += button_height + button_margin
-
-        if self.trade_popup_active:
-            if self.trade_stage == "select_player":
-                self.handle_select_player_click(pos)
-            elif self.trade_stage == "select_property":
-                self.handle_select_property_click(pos)
-            elif self.trade_stage == "enter_offer":
-                self.handle_enter_offer_click(pos)
-            elif self.trade_stage == "confirm_trade":
-                self.handle_confirm_trade_click(pos)
-            else:
-                self.trade_popup_active = False
-            return  # Prevent other clicks from interfering
 
         for button in self.buttons:
             if button["rect"].collidepoint(pos) and button["enabled"]:
@@ -780,6 +775,7 @@ class Game:
         self.buttons[0]["enabled"] = True  # Enable "Roll Dice" button
         self.buttons[1]["enabled"] = False  # Disable "Buy Property" button
         self.buttons[2]["enabled"] = False  # Disable "Build House" button
+        self.buttons[5]["enabled"] = False
         self.update_buttons()
         self.update_board()
 
