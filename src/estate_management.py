@@ -11,19 +11,6 @@ class Estate:
         self.position = position
         self.buyable = buyable
 
-    def buy_estate(self, player):
-        if self.owner is None:
-            if player.balance >= self.price:
-                player.balance -= self.price
-                self.owner = player
-                self.buyable = False
-                player.insert_estate_sorted(self)
-                return True
-            else:
-                return False
-        else:
-            return False
-
     def pay_rent(self, player):
         if self.owner is not None and self.owner != player and not self.mortgaged:
             rent_to_pay = self.rent
