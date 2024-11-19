@@ -3,7 +3,7 @@ Card management module
 """
 
 import random
-from src.utils import Queue
+from utils import Queue
 
 
 class Card:

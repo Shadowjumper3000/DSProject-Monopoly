@@ -4,13 +4,13 @@ Main file for the Monopoly game.
 
 import pygame
 import random
-from src.player_management import Player
-from src.estate_management import initialize_estates
-from src.card_management import (
+from player_management import Player
+from estate_management import initialize_estates
+from card_management import (
     create_chance_deck,
     create_community_chest_deck,
 )
-from src.utils import wrap_text
+from utils import wrap_text
 
 
 class Game:
@@ -422,13 +422,22 @@ class Game:
         player = self.players[self.current_player_index]
         current_estate = self.estates[player.position]
         if current_estate.buyable:
-            if current_estate.buy_estate(player):
+            if self.buy_estate(player, current_estate):
                 print(f"{player.name} bought {current_estate.name}")
             else:
                 print(f"{player.name} could not buy {current_estate.name}")
         self.buttons[1]["enabled"] = False  # Disable "Buy Property" button
         self.update_buttons()
         self.update_board()
+
+    def buy_estate(self, player, estate):
+        if player.balance >= estate.price:
+            player.update_balance(-estate.price)
+            estate.owner = player
+            player.estates.append(estate)
+            player.quick_sort_estates(0, len(player.estates) - 1)
+            return True
+        return False
 
     def handle_trade(self):
         """Initiate the trading process."""
