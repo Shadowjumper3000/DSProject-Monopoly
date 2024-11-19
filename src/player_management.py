@@ -24,14 +24,6 @@ class Player:
     def add_community_chest_card(self, card):
         self.community_chest_cards.append(card)
 
-    def buy_estate(self, estate):
-        if self.balance >= estate.price:
-            self.balance -= estate.price
-            estate.owner = self
-            self.insert_estate_sorted(estate)
-        else:
-            print(f"{self.name} does not have enough money to buy {estate.name}")
-
     def insert_estate_sorted(self, estate):
         self.estates.append(estate)
         self.quick_sort_estates(0, len(self.estates) - 1)
