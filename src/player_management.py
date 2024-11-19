@@ -24,24 +24,33 @@ class Player:
     def add_community_chest_card(self, card):
         self.community_chest_cards.append(card)
 
-    def insert_estate_sorted(self, estate):
+    def insert_estate_sorted(self, estate, game):
+        # Use insertion sort to insert the estate in the correct position based on index in the game's estates list
+        estate_index = game.estates.index(estate)
         self.estates.append(estate)
-        self.quick_sort_estates(0, len(self.estates) - 1)
+        i = len(self.estates) - 1
+        while i > 0 and game.estates.index(self.estates[i - 1]) > estate_index:
+            self.estates[i] = self.estates[i - 1]
+            i -= 1
+        self.estates[i] = estate
 
-    def quick_sort_estates(self, low, high):
+    def quick_sort_estates(self, low, high, game_estates):
         if low < high:
-            pi = self.partition(low, high)
-            self.quick_sort_estates(low, pi - 1)
-            self.quick_sort_estates(pi + 1, high)
+            pi = self.partition(low, high, game_estates)
+            self.quick_sort_estates(low, pi - 1, game_estates)
+            self.quick_sort_estates(pi + 1, high, game_estates)
 
-    def partition(self, low, high):
-        pivot = self.estates[high].index
+    def partition(self, low, high, game_estates):
+        pivot = game_estates.index(self.estates[high])
         i = low - 1
         for j in range(low, high):
-            if self.estates[j].index < pivot:
+            if game_estates.index(self.estates[j]) < pivot:
                 i += 1
                 self.estates[i], self.estates[j] = self.estates[j], self.estates[i]
-        self.estates[i + 1], self.estates[high] = self.estates[high], self.estates[i + 1]
+        self.estates[i + 1], self.estates[high] = (
+            self.estates[high],
+            self.estates[i + 1],
+        )
         return i + 1
 
     def get_total_repair_cost(self, house_cost, hotel_cost):

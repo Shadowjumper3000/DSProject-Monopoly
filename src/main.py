@@ -154,10 +154,8 @@ class Game:
                 if estate.name == location_name
             )
             old_position = player.position
-            player.position = target_position
-            if player.position < old_position:
-                player.update_balance(200)
-                print(f"{player.name} passed Go and collected $200")
+            steps = (target_position - old_position) % len(self.estates)
+            self.move_player(player, steps)
             self.handle_estate(player)
         except StopIteration:
             print(f"Estate with name '{location_name}' not found")
@@ -233,6 +231,11 @@ class Game:
         if not self.dice_rolled:
             dice_roll = random.randint(1, 6) + random.randint(1, 6)
             print(f"Dice rolled: {dice_roll}")
+            # Display the dice roll on the screen
+            dice_text = self.font.render(f"Dice: {dice_roll}", True, (0, 0, 0))
+            self.screen.blit(dice_text, (750, 200))
+            pygame.display.flip()
+            pygame.time.wait(1000)  # Wait for 1 second to show the dice roll
             self.move_player(self.players[self.current_player_index], dice_roll)
             self.dice_rolled = True
             self.buttons[0]["enabled"] = False  # Disable "Roll Dice" button
@@ -249,18 +252,20 @@ class Game:
             steps (int): The number of steps to move the player.
         """
         if player.in_jail:
-            player.jail_turns += 1
-            if player.jail_turns >= 3:
-                player.get_out_of_jail()
-            else:
-                print(f"{player.name} is in jail and cannot move.")
-                return
+            self.handle_jail_turn(player)
+            return
         print(f"Before move: {player.name} is on position {player.position}")
         old_position = player.position
-        player.position = (player.position + steps) % len(self.estates)
+        print(old_position)
+        for _ in range(steps):
+            player.position = (player.position + 1) % len(self.estates)
+            self.update_board()
+            pygame.time.wait(200)  # Wait for 200 milliseconds between each step
+
         if player.position < old_position:
             player.update_balance(200)
             print(f"{player.name} passed Go and collected $200")
+
         print(f"After move: {player.name} is on position {player.position}")
         self.handle_estate(player)
 
@@ -344,6 +349,9 @@ class Game:
             text_y += self.font.get_linesize()
 
         pygame.display.flip()
+        pygame.time.wait(4000)  # Display the card for 5 seconds
+        self.current_card = None
+        self.update_board()
 
     def draw_chance_card(self, player):
         card = self.chance_deck.draw_card()
@@ -435,7 +443,7 @@ class Game:
             player.update_balance(-estate.price)
             estate.owner = player
             player.estates.append(estate)
-            player.quick_sort_estates(0, len(player.estates) - 1)
+            player.quick_sort_estates(0, len(player.estates) - 1, self.estates)
             return True
         return False
 
@@ -767,15 +775,6 @@ class Game:
                 button_y += button_height + button_margin
 
         pygame.display.flip()
-
-    def handle_turn(self):
-        player = self.players[self.current_player_index]
-        if player.in_jail:
-            player.handle_jail_turn()
-            if not player.in_jail:
-                self.roll_dice()
-        else:
-            self.roll_dice()
 
     def end_turn(self):
         print(f"Turn ended for {self.players[self.current_player_index].name}")
