@@ -332,7 +332,8 @@ class Game:
         self.update_board()
 
     def display_card(self, card):
-        self.current_card = card
+        # Log the type and attributes of the card object
+
         card_rect = pygame.Rect(200, 220, 300, 300)  # Centered on the 700x700 board
         pygame.draw.rect(self.screen, (255, 255, 255), card_rect)
         pygame.draw.rect(self.screen, (0, 0, 0), card_rect, 2)
@@ -349,22 +350,19 @@ class Game:
             text_y += self.font.get_linesize()
 
         pygame.display.flip()
-        pygame.time.wait(4000)  # Display the card for 5 seconds
-        self.current_card = None
+        pygame.time.wait(2000)  # Display the card for 2 seconds
         self.update_board()
 
     def draw_chance_card(self, player):
         card = self.chance_deck.draw_card()
-        print(type(card))
-        self.display_card(card)
-        card.apply_effect(player, self)
+        self.apply_effect(player, self)
         print(f"{player.name} drew a Chance card: {card.description}")
 
     def draw_community_chest_card(self, player):
         card = self.community_chest_deck.draw_card()
-        self.display_card(card)
-        card.apply_effect(player, self)
+        print(type(card))
         print(f"{player.name} drew a Community Chest card: {card.description}")
+        self.apply_effect(player, card)
 
     def handle_click(self, pos):
         if hasattr(self, "current_card") and self.current_card:
@@ -903,6 +901,25 @@ class Game:
                         self.handle_keydown(event)
 
         pygame.quit()
+
+    def apply_effect(self, player, card):
+        self.display_card(card)
+        if card.is_get_out_of_jail:
+            player.get_out_of_jail = True
+            print(f"{player.name} got a Get Out of Jail Free card")
+        if card.move_to:
+            match card.move_to:
+                case "nearest_utility":
+                    self.move_to_nearest_utility(player)
+                case "nearest_railroad":
+                    self.move_to_nearest_railroad(player)
+                case "jail":
+                    self.go_to_jail(player)
+                case _:
+                    self.move_player_to(player, card.move_to)
+        if card.value:
+            player.update_balance(card.value * card.multiplier)
+            print(f"{player.name} received ${card.value}")
 
 
 if __name__ == "__main__":
