@@ -26,6 +26,7 @@ class Game:
         self.dice_rolled = False
         self.chance_deck = create_chance_deck()
         self.community_chest_deck = create_community_chest_deck()
+        self.current_card = None
         self.buttons = [
             {
                 "label": "Roll Dice",
@@ -230,6 +231,7 @@ class Game:
     def roll_dice(self):
         if not self.dice_rolled:
             dice_roll = random.randint(1, 6) + random.randint(1, 6)
+            # dice_roll = 1
             print(f"Dice rolled: {dice_roll}")
             # Display the dice roll on the screen
             dice_text = self.font.render(f"Dice: {dice_roll}", True, (0, 0, 0))
@@ -351,18 +353,23 @@ class Game:
 
         pygame.display.flip()
         pygame.time.wait(2000)  # Display the card for 2 seconds
-        self.update_board()
+        print("Card displayed")
 
     def draw_chance_card(self, player):
-        card = self.chance_deck.draw_card()
-        self.apply_effect(player, self)
-        print(f"{player.name} drew a Chance card: {card.description}")
+        self.current_card = self.chance_deck.draw_card()
+        self.display_card(self.current_card)
+        self.apply_effect(player, self.current_card)
+        print(f"{player.name} drew a Chance card: {self.current_card.description}")
+        self.current_card = None
 
     def draw_community_chest_card(self, player):
-        card = self.community_chest_deck.draw_card()
-        print(type(card))
-        print(f"{player.name} drew a Community Chest card: {card.description}")
-        self.apply_effect(player, card)
+        self.current_card = self.community_chest_deck.draw_card()
+        self.display_card(self.current_card)
+        print(
+            f"{player.name} drew a Community Chest card: {self.current_card.description}"
+        )
+        self.apply_effect(player, self.current_card)
+        self.current_card = None
 
     def handle_click(self, pos):
         if hasattr(self, "current_card") and self.current_card:
@@ -903,7 +910,7 @@ class Game:
         pygame.quit()
 
     def apply_effect(self, player, card):
-        self.display_card(card)
+        print(f"Applying effect of card: {card.description}")
         if card.is_get_out_of_jail:
             player.get_out_of_jail = True
             print(f"{player.name} got a Get Out of Jail Free card")
@@ -913,7 +920,7 @@ class Game:
                     self.move_to_nearest_utility(player)
                 case "nearest_railroad":
                     self.move_to_nearest_railroad(player)
-                case "jail":
+                case "Jail":
                     self.go_to_jail(player)
                 case _:
                     self.move_player_to(player, card.move_to)
