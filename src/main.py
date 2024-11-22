@@ -5,7 +5,7 @@ Main file for the Monopoly game.
 import pygame
 import random
 from player_management import Player
-from estate_management import initialize_estates
+from estate_management import initialize_estates, initialize_estate_dict
 from card_management import (
     create_chance_deck,
     create_community_chest_deck,
@@ -22,6 +22,7 @@ class Game:
         self.font = pygame.font.Font(None, 36)
         self.players = []
         self.estates = initialize_estates()
+        self.estate_dict = initialize_estate_dict(self.estates)
         self.current_player_index = 0
         self.dice_rolled = False
         self.chance_deck = create_chance_deck()

@@ -430,3 +430,8 @@ def initialize_estates():
         ),
     ]
     return estates
+
+
+def initialize_estate_dict():
+    estates = initialize_estates()
+    return {estate.name: index for index, estate in enumerate(estates)}
