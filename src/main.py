@@ -136,6 +136,7 @@ class Game:
                 self.get_out_of_jail(player)
                 print(f"{player.name} is released from jail after 3 turns")
             else:
+                self.display_message(f"{player.name} is in jail for {player.jail_turns} turns")
                 print(f"{player.name} is in jail for {player.jail_turns} turns")
 
     def get_estate_position_by_name(self, name):
