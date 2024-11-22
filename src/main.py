@@ -136,7 +136,9 @@ class Game:
                 self.get_out_of_jail(player)
                 print(f"{player.name} is released from jail after 3 turns")
             else:
-                self.display_message(f"{player.name} is in jail for {player.jail_turns} turns")
+                self.display_message(
+                    f"{player.name} is in jail for {player.jail_turns} turns"
+                )
                 print(f"{player.name} is in jail for {player.jail_turns} turns")
 
     def get_estate_position_by_name(self, name):
@@ -421,6 +423,16 @@ class Game:
                         return
                     button_y += button_height + button_margin
 
+        if hasattr(self, "trade_popup_active") and self.trade_popup_active:
+            if self.trade_stage == "select_player":
+                self.handle_select_player_click(pos)
+            elif self.trade_stage == "select_property":
+                self.handle_select_property_click(pos)
+            elif self.trade_stage == "enter_offer":
+                self.handle_enter_offer_click(pos)
+            elif self.trade_stage == "confirm_trade":
+                self.handle_confirm_trade_click(pos)
+
         for button in self.buttons:
             if button["rect"].collidepoint(pos) and button["enabled"]:
                 button["action"]()
@@ -504,8 +516,8 @@ class Game:
                 self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
                 pygame.display.flip()
                 pygame.time.wait(2000)  # Display message for 2 seconds
-                self.trade_popup_active = False
-                self.update_board()
+                self.trade_popup_active = False  # Close the trade menu
+                self.update_board()  # Refresh the board
                 return
 
             title_text = self.font.render(
