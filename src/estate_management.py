@@ -27,16 +27,18 @@ class Estate:
                 return False
         return True
 
-    def build_house(self):
-        if self.houses < 4 and not self.hotel:
-            self.houses += 1
-            return True
-        elif self.houses == 4:
-            self.hotel = True
-            self.houses = 0
-            return True
-        else:
-            return False
+    def build_house(self, game):
+        # Check if the player owns all estates in the group
+        group_estates = [estate for estate in game.estates if estate.group == self.group]
+        if all(estate.owner == self.owner for estate in group_estates):
+            if self.houses < 4 and not self.hotel:
+                self.houses += 1
+                return True
+            elif self.houses == 4:
+                self.hotel = True
+                self.houses = 0
+                return True
+        return False
 
     def mortgage(self):
         if not self.mortgaged:

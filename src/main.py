@@ -143,7 +143,7 @@ class Game:
                 print(f"{player.name} is in jail for {player.jail_turns} turns")
 
     def get_estate_position_by_name(self, name):
-        return next(i for i, estate in enumerate(self.estates) if estate.name == name)
+        return self.estate_dict[name]
 
     def move_player_to(self, player, location_name):
         """Move player to a specific location.
@@ -308,17 +308,22 @@ class Game:
         player = self.players[self.current_player_index]
         current_estate = self.estates[player.position]
         if current_estate.owner == player:
-            if current_estate.build_house():
-                print(f"{player.name} built a house on {current_estate.name}")
-                self.display_message(
-                    f"{player.name} built a house on {current_estate.name}"
-                )
+            if current_estate.build_house(self):
+                if current_estate.hotel:
+                    print(f"{player.name} built a hotel on {current_estate.name}")
+                    self.display_message(
+                        f"{player.name} built a hotel on {current_estate.name}"
+                    )
+                else:
+                    print(f"{player.name} built a house on {current_estate.name}")
+                    self.display_message(
+                        f"{player.name} built a house on {current_estate.name}"
+                    )
             else:
                 print(f"{player.name} cannot build a house on {current_estate.name}")
                 self.display_message(
                     f"{player.name} cannot build a house on {current_estate.name}"
                 )
-        self.buttons[2]["enabled"] = False  # Disable "Build House" button
 
     def display_message(self, message):
         message_rect = pygame.Rect(200, 250, 600, 100)  # Centered on the screen
@@ -362,7 +367,10 @@ class Game:
     def draw_chance_card(self, player):
         self.current_card = self.chance_deck.draw_card()
         self.display_card(self.current_card)
-        self.apply_effect(player, self.current_card)
+        self.apply_effect(
+            player,
+            self.current_card,
+        )
         print(f"{player.name} drew a Chance card: {self.current_card.description}")
         self.current_card = None
 
@@ -463,6 +471,17 @@ class Game:
             estate.owner = player
             player.estates.append(estate)
             player.quick_sort_estates(0, len(player.estates) - 1, self.estates)
+
+            # Check if the player owns three complete groups
+            groups_owned = set()
+            for estate in player.estates:
+                group_estates = [e for e in self.estates if e.group == estate.group]
+                if all(e.owner == player for e in group_estates):
+                    groups_owned.add(estate.group)
+
+            if len(groups_owned) >= 3:
+                self.buttons[2]["enabled"] = True  # Enable "Build House" button
+
             return True
         return False
 
@@ -799,18 +818,36 @@ class Game:
         print(f"Turn ended for {self.players[self.current_player_index].name}")
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         self.dice_rolled = False
-        self.buttons[0]["enabled"] = True  # Enable "Roll Dice" button
-        self.buttons[1]["enabled"] = False  # Disable "Buy Property" button
-        self.buttons[2]["enabled"] = False  # Disable "Build House" button
-        self.buttons[5]["enabled"] = False
         self.update_buttons()
         self.update_board()
 
     def update_buttons(self):
         player = self.players[self.current_player_index]
+        current_estate = self.estates[player.position]
+        self.buttons[0][
+            "enabled"
+        ] = not self.dice_rolled  # Enable "Roll Dice" button if dice not rolled
+        self.buttons[1]["enabled"] = (
+            current_estate.buyable and current_estate.owner is None
+        )  # Enable "Buy Property" button if property is buyable and not owned
+        self.buttons[2]["enabled"] = (
+            current_estate.owner == player
+            and not current_estate.hotel
+            and all(
+                estate.owner == player
+                for estate in self.estates
+                if estate.group == current_estate.group
+            )
+        )  # Enable "Build House" button if player owns the property, it doesn't have a hotel, and player owns all properties in the group
         self.buttons[3]["enabled"] = bool(
             player.estates
         )  # Enable "Mortgage" button only if player has properties
+        self.buttons[4]["enabled"] = any(
+            p.estates for p in self.players if p != player
+        )  # Enable "Trade" button only if another player owns a property
+        self.buttons[5][
+            "enabled"
+        ] = self.dice_rolled  # Enable "End Turn" button only if dice rolled
 
     def draw_buttons(self):
         for button in self.buttons:
@@ -854,6 +891,33 @@ class Game:
                 self.screen, token_color, adjusted_position, 20
             )  # Increased radius to 20
 
+        for estate in self.estates:
+            estate_position = estate.position
+            house_size = 10
+            house_margin = 5
+
+            if estate.hotel:
+                # Draw a red square for the hotel
+                hotel_rect = pygame.Rect(
+                    estate_position[0] - house_size // 2,
+                    estate_position[1] - house_size // 2,
+                    house_size,
+                    house_size,
+                )
+                pygame.draw.rect(self.screen, (255, 0, 0), hotel_rect)
+            else:
+                # Draw green squares for each house in a 2x2 grid
+                for i in range(estate.houses):
+                    row = i // 2
+                    col = i % 2
+                    house_rect = pygame.Rect(
+                        estate_position[0] - house_size // 2 + (col * (house_size + house_margin)),
+                        estate_position[1] - house_size // 2 + (row * (house_size + house_margin)),
+                        house_size,
+                        house_size,
+                    )
+                    pygame.draw.rect(self.screen, (0, 255, 0), house_rect)
+                    
     def update_board(self):
         self.screen.blit(self.background, (0, 0))
         self.draw_buttons()
