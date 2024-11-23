@@ -32,11 +32,6 @@ Welcome to the Monopoly Project! This project is a digital implementation of the
     pip install -r requirements.txt
     ```
 
-## Usage
-
-Start the game with:
-```sh
-```
 
 ## Contributing
 
