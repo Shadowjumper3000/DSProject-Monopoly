@@ -172,7 +172,7 @@ class Game:
         line_height = 30
 
         # Clear the entire right side of the board
-        pygame.draw.rect(self.screen, (255, 255, 255), (info_x, 0, 280, 700))
+        pygame.draw.rect(self.screen, (255, 255, 255), (info_x - 20, 0, 280, 700))
 
         # Draw buttons
         self.draw_buttons()
@@ -228,14 +228,14 @@ class Game:
         info_y += line_height
 
         for card in current_player.community_chest_cards:
-            card_text = self.font.render(f"- {card.description}", True, (0, 0, 0))
+            card_text = self.font.render(f"- {card.description}", True, (0, 0, 255))
             self.screen.blit(card_text, (info_x, info_y))
             info_y += line_height
 
     def roll_dice(self):
         if not self.dice_rolled:
             dice_roll = random.randint(1, 6) + random.randint(1, 6)
-            dice_roll = 1
+            # dice_roll = 1
             print(f"Dice rolled: {dice_roll}")
             # Display the dice roll on the screen
             dice_text = self.font.render(f"Dice: {dice_roll}", True, (0, 0, 0))
@@ -291,7 +291,7 @@ class Game:
             self.draw_chance_card(player)
         elif current_estate.name == "Community Chest":
             self.draw_community_chest_card(player)
-        elif current_estate.name == "Go To Jail":
+        elif current_estate.name == "Go to Jail":
             self.go_to_jail(player)
         elif current_estate.owner is not None and current_estate.owner != player:
             if not current_estate.pay_rent(player):
@@ -458,7 +458,7 @@ class Game:
     def handle_buy(self):
         player = self.players[self.current_player_index]
         current_estate = self.estates[player.position]
-        if current_estate.buyable:
+        if current_estate.buyable and current_estate.owner is None:
             if self.buy_estate(player, current_estate):
                 print(f"{player.name} bought {current_estate.name}")
             else:
@@ -471,8 +471,7 @@ class Game:
         if player.balance >= estate.price:
             player.update_balance(-estate.price)
             estate.owner = player
-            player.estates.append(estate)
-            player.quick_sort_estates(0, len(player.estates) - 1, self.estates)
+            player.insert_estate_sorted(estate, self)
 
             # Check if the player owns three complete groups
             groups_owned = set()
@@ -992,7 +991,7 @@ class Game:
     def apply_effect(self, player, card):
         print(f"Applying effect of card: {card.description}")
         if card.is_get_out_of_jail:
-            player.get_out_of_jail = True
+            player.community_chest_cards.append(card)
             print(f"{player.name} got a Get Out of Jail Free card")
         if card.move_to:
             match card.move_to:
