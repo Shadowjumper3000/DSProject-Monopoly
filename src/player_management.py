@@ -34,25 +34,6 @@ class Player:
             i -= 1
         self.estates[i] = estate
 
-    def quick_sort_estates(self, low, high, game_estates):
-        if low < high:
-            pi = self.partition(low, high, game_estates)
-            self.quick_sort_estates(low, pi - 1, game_estates)
-            self.quick_sort_estates(pi + 1, high, game_estates)
-
-    def partition(self, low, high, game_estates):
-        pivot = game_estates.index(self.estates[high])
-        i = low - 1
-        for j in range(low, high):
-            if game_estates.index(self.estates[j]) < pivot:
-                i += 1
-                self.estates[i], self.estates[j] = self.estates[j], self.estates[i]
-        self.estates[i + 1], self.estates[high] = (
-            self.estates[high],
-            self.estates[i + 1],
-        )
-        return i + 1
-
     def get_total_repair_cost(self, house_cost, hotel_cost):
         total_cost = 0
         for estate in self.estates:
