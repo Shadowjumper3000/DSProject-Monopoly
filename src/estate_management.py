@@ -4,6 +4,7 @@ class Estate:
         self.price = price
         self.group = group
         self.rent = rent
+        self.house_cost = price // 2
         self.owner = None
         self.houses = 0
         self.hotel = False

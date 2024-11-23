@@ -235,7 +235,7 @@ class Game:
     def roll_dice(self):
         if not self.dice_rolled:
             dice_roll = random.randint(1, 6) + random.randint(1, 6)
-            # dice_roll = 1
+            dice_roll = 1
             print(f"Dice rolled: {dice_roll}")
             # Display the dice roll on the screen
             dice_text = self.font.render(f"Dice: {dice_roll}", True, (0, 0, 0))
@@ -311,11 +311,13 @@ class Game:
             if current_estate.build_house(self):
                 if current_estate.hotel:
                     print(f"{player.name} built a hotel on {current_estate.name}")
+                    player.update_balance(-current_estate.house_cost * 2)
                     self.display_message(
                         f"{player.name} built a hotel on {current_estate.name}"
                     )
                 else:
                     print(f"{player.name} built a house on {current_estate.name}")
+                    player.update_balance(-current_estate.house_cost)
                     self.display_message(
                         f"{player.name} built a house on {current_estate.name}"
                     )
@@ -917,7 +919,7 @@ class Game:
                         house_size,
                     )
                     pygame.draw.rect(self.screen, (0, 255, 0), house_rect)
-                    
+
     def update_board(self):
         self.screen.blit(self.background, (0, 0))
         self.draw_buttons()
