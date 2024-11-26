@@ -1,5 +1,7 @@
 class Estate:
+    # Represents a property on the game board
     def __init__(self, name, price, rent, position, group, buyable):
+        # Initialize the estate's attributes
         self.name = name
         self.price = price
         self.group = group
@@ -13,12 +15,15 @@ class Estate:
         self.buyable = buyable
 
     def pay_rent(self, player):
+        # Handles the payment of rent when a player lands on the estate
         if self.owner is not None and self.owner != player and not self.mortgaged:
             rent_to_pay = self.rent
             if self.hotel:
                 rent_to_pay *= 5
             elif self.houses > 0:
                 rent_to_pay *= self.houses
+            
+            # Check if the player can afford the rent
             if player.balance >= rent_to_pay:
                 player.balance -= rent_to_pay
                 self.owner.balance += rent_to_pay
@@ -29,8 +34,10 @@ class Estate:
         return True
 
     def build_house(self, game):
-        # Check if the player owns all estates in the group
+        # Allows the owner to build a house or upgrade to a hotel
         group_estates = [estate for estate in game.estates if estate.group == self.group]
+        
+        # Check if the owner owns all estates in the group
         if all(estate.owner == self.owner for estate in group_estates):
             if self.houses < 4 and not self.hotel:
                 self.houses += 1
@@ -42,26 +49,32 @@ class Estate:
         return False
 
     def mortgage(self):
+        # Mortgages the estate to gain funds
         if not self.mortgaged:
             self.mortgaged = True
             return True
         return False
 
     def unmortgage(self):
+        # Unmortgages the estate
         if self.mortgaged:
             self.mortgaged = False
             return True
         return False
 
     def __str__(self):
+        # Provides a string representation of the estate
         return f"{self.name} - Price: {self.price}, Rent: {self.rent}, Houses: {self.houses}, Hotel: {self.hotel}, Owner: {self.owner.name if self.owner else 'None'}"
 
 
 def initialize_estates():
+    # Creates a list of estates with their respective properties
     board_size = 700
     estate_width = 58  # Width of each estate
     corner_width = estate_width * 1.5  # Width of corner estates
     offset = 30  # Small offset for x and y coordinates
+
+    # List of estate objects with details such as name, price, rent, position, etc.
     estates = [
         Estate(
             "Go",
@@ -436,4 +449,5 @@ def initialize_estates():
 
 
 def initialize_estate_dict(estate_lib):
+    # Creates a dictionary mapping estate names to their indices in the estate list
     return {estate.name: index for index, estate in enumerate(estate_lib)}
