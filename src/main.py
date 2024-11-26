@@ -394,36 +394,36 @@ class Game:
                 return
 
         if hasattr(self, "mortgage_popup_active") and self.mortgage_popup_active:
-            popup_rect = pygame.Rect(200, 150, 300, 400)
+            popup_rect = pygame.Rect(100, 100, 600, 500)
             if not popup_rect.collidepoint(pos):
                 self.mortgage_popup_active = False
                 self.update_board()
                 return
 
             button_height = 40
-            button_width = 260
+            button_width = 560
             button_margin = 10
-            button_y = popup_rect.y + 60
+            button_y = popup_rect.y + 80
 
-            # Handle not mortgaged properties
-            button_y += button_height  # Skip the "Not Mortgaged" title
-            for estate in self.mortgage_popup_player.estates:
-                if not estate.mortgaged:
-                    button_rect = pygame.Rect(
-                        popup_rect.x + 20, button_y, button_width, button_height
-                    )
-                    if button_rect.collidepoint(pos):
-                        self.mortgage_property(self.mortgage_popup_player, estate)
-                        self.mortgage_popup_active = False
-                        self.update_board()
-                        return
-                    button_y += button_height + button_margin
+            # Handle recommended properties to mortgage
+            properties = self.calculate_mortgage_efficiency(self.mortgage_popup_player)
+            for estate, score in properties:
+                button_rect = pygame.Rect(
+                    popup_rect.x + 20, button_y, button_width, button_height
+                )
+                if button_rect.collidepoint(pos):
+                    self.mortgage_property(self.mortgage_popup_player, estate)
+                    self.mortgage_popup_active = False
+                    self.update_board()
+                    return
+                button_y += button_height + button_margin
 
             # Handle mortgaged properties
-            button_y += button_margin  # Add some space between the two categories
-            button_y += button_height  # Skip the "Mortgaged" title
-            for estate in self.mortgage_popup_player.estates:
-                if estate.mortgaged:
+            mortgaged_properties = [estate for estate in self.mortgage_popup_player.estates if estate.mortgaged]
+            if mortgaged_properties:
+                button_y += button_margin  # Skip the "Mortgaged Properties" title
+                button_y += button_height
+                for estate in mortgaged_properties:
                     button_rect = pygame.Rect(
                         popup_rect.x + 20, button_y, button_width, button_height
                     )
@@ -764,46 +764,67 @@ class Game:
 
         self.display_mortgage_popup(player)
 
+    def calculate_mortgage_efficiency(self, player):
+        """Calculate mortgage efficiency score for each mortgagable property.
+
+        Args:
+            player (Player): The player who wants to mortgage properties.
+
+        Returns:
+            List[Tuple[Estate, float]]: A list of tuples containing the estate and its efficiency score.
+        """
+        properties = []
+        for estate in player.estates:
+            if not estate.mortgaged:
+                future_income_lost = estate.get_current_rent(self)  # Pass game instance
+                mortgage_value = estate.price // 2
+                efficiency_score = mortgage_value / future_income_lost if future_income_lost != 0 else 0
+                properties.append((estate, efficiency_score))
+        properties.sort(key=lambda x: x[1], reverse=True)
+        return properties
+
     def display_mortgage_popup(self, player):
         self.mortgage_popup_active = True
         self.mortgage_popup_player = player
 
-        popup_rect = pygame.Rect(200, 150, 300, 400)  # Centered on the 700x700 board
+        # Increased popup size for better display
+        popup_rect = pygame.Rect(100, 100, 600, 500)  
         pygame.draw.rect(self.screen, (255, 255, 255), popup_rect)
         pygame.draw.rect(self.screen, (0, 0, 0), popup_rect, 2)
 
-        title_text = self.font.render("Mortgage Property", True, (0, 0, 0))
+        title_text = self.font.render("Mortgage Property Recommendations", True, (0, 0, 0))
         self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
 
+        properties = self.calculate_mortgage_efficiency(player)
+
+        # Display recommended properties to mortgage
         button_height = 40
-        button_width = 260
+        button_width = 560
         button_margin = 10
-        button_y = popup_rect.y + 60
+        button_y = popup_rect.y + 80
 
-        # Display not mortgaged properties
-        not_mortgaged_text = self.font.render("Not Mortgaged", True, (0, 0, 0))
-        self.screen.blit(not_mortgaged_text, (popup_rect.x + 20, button_y))
-        button_y += button_height
+        for estate, score in properties:
+            button_rect = pygame.Rect(
+                popup_rect.x + 20, button_y, button_width, button_height
+            )
+            pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
+            pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
+            estate_text = self.font.render(
+                f"{estate.name} - Efficiency Score: {score:.2f}", True, (0, 0, 0)
+            )
+            self.screen.blit(estate_text, (button_rect.x + 10, button_rect.y + 10))
+            button_y += button_height + button_margin
 
-        for estate in player.estates:
-            if not estate.mortgaged:
-                button_rect = pygame.Rect(
-                    popup_rect.x + 20, button_y, button_width, button_height
-                )
-                pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
-                pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
-                estate_text = self.font.render(estate.name, True, (0, 0, 0))
-                self.screen.blit(estate_text, (button_rect.x + 10, button_rect.y + 10))
-                button_y += button_height + button_margin
+        # Display mortgaged properties separately
+        mortgaged_properties = [estate for estate in player.estates if estate.mortgaged]
 
-        # Display mortgaged properties
-        button_y += button_margin  # Add some space between the two categories
-        mortgaged_text = self.font.render("Mortgaged", True, (0, 0, 0))
-        self.screen.blit(mortgaged_text, (popup_rect.x + 20, button_y))
-        button_y += button_height
+        if mortgaged_properties:
+            button_y += button_margin  # Add space before mortgaged properties
+            mortgaged_text = self.font.render("Mortgaged Properties", True, (0, 0, 0))
+            self.screen.blit(mortgaged_text, (popup_rect.x + 20, button_y))
+            button_y += button_height
 
-        for estate in player.estates:
-            if estate.mortgaged:
+            for estate in mortgaged_properties:
                 button_rect = pygame.Rect(
                     popup_rect.x + 20, button_y, button_width, button_height
                 )

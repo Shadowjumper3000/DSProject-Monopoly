@@ -14,6 +14,33 @@ class Estate:
         self.position = position
         self.buyable = buyable
 
+    def get_current_rent(self, game):
+        """Calculate the current rent based on estate type."""
+        if self.group == "Utility":
+            # Rent is 4 times dice roll if one utility owned, 10 times if both
+            utilities_owned = [
+                estate for estate in game.estates
+                if estate.group == "Utility" and estate.owner == self.owner
+            ]
+            # Use average dice roll of 7 for estimation
+            dice_roll_estimate = 7
+            multiplier = 4 if len(utilities_owned) == 1 else 10
+            rent = multiplier * dice_roll_estimate
+        elif self.group == "Station":
+            # Rent depends on number of stations owned
+            stations_owned = [
+                estate for estate in game.estates
+                if estate.group == "Station" and estate.owner == self.owner
+            ]
+            rent = 25 * len(stations_owned)
+        else:
+            rent = self.rent
+            if self.hotel:
+                rent *= 5
+            elif self.houses > 0:
+                rent *= self.houses
+        return rent
+
     def pay_rent(self, player):
         # Handles the payment of rent when a player lands on the estate
         if self.owner is not None and self.owner != player and not self.mortgaged:
