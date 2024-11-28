@@ -10,7 +10,7 @@ from card_management import (
     create_chance_deck,
     create_community_chest_deck,
 )
-from utils import wrap_text
+from utils import wrap_text, quick_sorts
 
 
 class Game:
@@ -326,8 +326,8 @@ class Game:
         """Moves the player's token a specified number of steps on the board.
 
         Runtime Complexity:
-            - Worst-case O(S): Where S is the number of steps moved (maximum of 12).
-            - Average-case O(S): Average dice roll results in a small constant S.
+            - Worst-case O(N): Where N is the number of steps moved (maximum of 12).
+            - Average-case O(N): Average dice roll results in a small constant N.
         """
         """
         Move the player a certain number of steps on the board.
@@ -987,8 +987,8 @@ class Game:
                     else 0
                 )
                 properties.append((estate, efficiency_score))
-        properties.sort(key=lambda x: x[1], reverse=True)
-        return properties
+        sorted_properties = quick_sorts(properties, key=lambda x: x[1], reverse=True)
+        return sorted_properties
 
     def display_mortgage_popup(self, player):
         """Displays a popup with mortgage recommendations.
@@ -1280,7 +1280,7 @@ class Game:
         """Applies the effect of a drawn card to the player.
 
         Runtime Complexity:
-            - Worst-case O(E): May involve moving the player or modifying properties.
+            - Worst-case O(N): May involve moving the player or modifying properties. Where N is the number of properties.
             - Average-case O(1): Most effects are simple state changes.
         """
         print(f"Applying effect of card: {card.description}")
