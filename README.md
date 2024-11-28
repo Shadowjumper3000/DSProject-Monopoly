@@ -23,20 +23,15 @@ Welcome to the Monopoly Project! This project is a digital implementation of the
     ```sh
     python -m venv .venv
     ```
-4. Install dependencies:
-    ```sh
-    pip install -r requirements.txt
-    ```
-5. Activate venv:
+4. Activate venv:
     ```sh
     .venv\Scripts\activate
     ```
+5. Install dependencies:
+    ```sh
+    pip install -r requirements.txt
+    ```
 
-## Usage
-
-Start the game with:
-```sh
-```
 
 ## Contributing
 
