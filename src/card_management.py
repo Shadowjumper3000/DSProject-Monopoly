@@ -12,11 +12,8 @@ class Card:
     ):
         """
         Initializes a Card object with specific attributes.
-        :param description: A string describing the card's effect.
-        :param value: A monetary value associated with the card (default is 0).
-        :param is_get_out_of_jail: Boolean indicating if the card is a "Get Out of Jail Free" card.
-        :param move_to: Specifies a board position or action to move the player to (default is None).
-        :param multiplier: A multiplier applied to certain card effects (default is 1).
+        - Worst-case O(1): Assigning attributes during initialization.
+        - Average-case O(1): Same as worst-case.           
         """
         self.description = description
         self.value = value
@@ -27,7 +24,8 @@ class Card:
     def __str__(self):
         """
         Returns a string representation of the card.
-        :return: The card's description.
+        - Worst-case O(1): Creating a string representation of the card.
+        - Average-case O(1): Same as worst-case
         """
         return self.description
 
@@ -36,21 +34,24 @@ class CardDeck:
     def __init__(self):
         """
         Initializes an empty card deck using a queue for card management.
+        - Worst-case O(1): Initializing an empty data structure for the deck.
+        - Average-case O(1): Same as worst-case.
         """
         self.deck = Queue()
 
     def add_card(self, card):
         """
         Adds a card to the deck.
-        :param card: The card to be added.
+        - Worst-case O(1): Queuing a card into the deck.
+        - Average-case O(1): Same as worst-case.
         """
         self.deck.enqueue(card)
 
     def draw_card(self):
         """
         Draws a card from the top of the deck.
-        :return: The card drawn from the deck.
-        :raises IndexError: If the deck is empty.
+        - Worst-case O(1): Pop a card from the top of the deck.
+        - Average-case O(1): Same as worst-case.
         """
         if not self.deck.is_empty():
             return self.deck.dequeue()
@@ -60,6 +61,8 @@ class CardDeck:
     def shuffle(self):
         """
         Shuffles the deck randomly.
+        - Worst-case O(N): Where N is the number of cards in the deck; shuffling involves iterating over all cards.
+        - Average-case O(N): Same as worst-case.
         """
         cards = self.deck.display()
         random.shuffle(cards)
@@ -70,7 +73,8 @@ class CardDeck:
     def __len__(self):
         """
         Returns the number of cards in the deck.
-        :return: The length of the deck.
+        - Worst-case O(1): Retrieving the length of the deck.
+        - Average-case O(1): Same as worst-case.
         """
         return len(self.deck)
 
@@ -78,7 +82,8 @@ class CardDeck:
 def initialize_chance_cards():
     """
     Creates and returns a list of predefined Chance cards.
-    :return: List of Card objects for the Chance deck.
+    - Worst-case O(1): Creating a list with a fixed number of cards.
+    - Average-case O(1): Same as worst-case.
     """
     return [
         # Each card has a description and optional effects.
@@ -145,7 +150,8 @@ def initialize_chance_cards():
 def create_chance_deck():
     """
     Creates and returns a shuffled Chance card deck.
-    :return: Shuffled CardDeck object containing Chance cards.
+    - Worst-case O(N): Where N is the number of cards in the deck; shuffling involves iterating over all cards.
+    - Average-case O(N): Same as worst-case.
     """
     chance_deck = CardDeck()
     for card in initialize_chance_cards():
@@ -157,7 +163,8 @@ def create_chance_deck():
 def initialize_community_chest_cards():
     """
     Creates and returns a list of predefined Community Chest cards.
-    :return: List of Card objects for the Community Chest deck.
+    - Worst-case O(1): Creating a list with a fixed number of cards.
+    - Average-case O(1): Same as worst-case.
     """
     return [
         Card("Advance to Go. Collect $200", 0, False, None),
@@ -197,7 +204,8 @@ def initialize_community_chest_cards():
 def create_community_chest_deck():
     """
     Creates and returns a shuffled Community Chest card deck.
-    :return: Shuffled CardDeck object containing Community Chest cards.
+    - Worst-case O(N): Where N is the number of cards in the deck; shuffling involves iterating over all cards.
+    - Average-case O(N): Same as worst-case.
     """
     community_chest_deck = CardDeck()
     for card in initialize_community_chest_cards():

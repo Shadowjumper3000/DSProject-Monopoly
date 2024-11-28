@@ -15,7 +15,10 @@ class Estate:
         self.buyable = buyable
 
     def get_current_rent(self, game):
-        """Calculate the current rent based on estate type."""
+        """Calculate the current rent based on estate type.
+        - Worst-case O(n): Iterating through all estates to find the owner.
+        - Average-case O(n): Same as worst-case.
+        """
         if self.group == "Utility":
             # Rent is 4 times dice roll if one utility owned, 10 times if both
             utilities_owned = [
@@ -42,6 +45,11 @@ class Estate:
         return rent
 
     def pay_rent(self, player):
+        """
+        Pay rent to the owner of the estate.
+        - Worst-case O(1): Checking the owner and updating balances.
+        - Average-case O(1): Same as worst-case.
+        """
         # Handles the payment of rent when a player lands on the estate
         if self.owner is not None and self.owner != player and not self.mortgaged:
             rent_to_pay = self.rent
@@ -61,7 +69,11 @@ class Estate:
         return True
 
     def build_house(self, game):
-        # Allows the owner to build a house or upgrade to a hotel
+        """
+        Build a house or hotel on the estate.
+        - Worst-case O(n): Iterating through all estates in the group.
+        - Average-case O(n): Same as worst-case.
+        """
         group_estates = [estate for estate in game.estates if estate.group == self.group]
         
         # Check if the owner owns all estates in the group
@@ -76,6 +88,11 @@ class Estate:
         return False
 
     def mortgage(self):
+        """
+        Mortgage the estate to gain funds.
+        - Worst-case O(1): Setting the mortgaged attribute.
+        - Average-case O(1): Same as worst-case.
+        """
         # Mortgages the estate to gain funds
         if not self.mortgaged:
             self.mortgaged = True
@@ -83,6 +100,11 @@ class Estate:
         return False
 
     def unmortgage(self):
+        """
+        Unmortgage the estate to regain ownership.
+        - Worst-case O(1): Setting the mortgaged attribute.
+        - Average-case O(1): Same as worst-case.
+        """
         # Unmortgages the estate
         if self.mortgaged:
             self.mortgaged = False
@@ -90,11 +112,21 @@ class Estate:
         return False
 
     def __str__(self):
+        """
+        String representation of the estate.
+        - Worst-case O(1): Creating a string representation of the estate.
+        - Average-case O(1): Same as worst-case.
+        """
         # Provides a string representation of the estate
         return f"{self.name} - Price: {self.price}, Rent: {self.rent}, Houses: {self.houses}, Hotel: {self.hotel}, Owner: {self.owner.name if self.owner else 'None'}"
 
 
 def initialize_estates():
+    """
+    Initialize the list of estates on the board.
+    - Worst-case O(1): Creating a list of estates with their properties.
+    - Average-case O(1): Same as worst-case.
+    """
     # Creates a list of estates with their respective properties
     board_size = 700
     estate_width = 58  # Width of each estate
@@ -476,5 +508,10 @@ def initialize_estates():
 
 
 def initialize_estate_dict(estate_lib):
+    """
+    Initialize a dictionary mapping estate names to their indices.
+    - Worst-case O(n): Iterating through all estates to create the dictionary.
+    - Average-case O(n): Same as worst-case.
+    """
     # Creates a dictionary mapping estate names to their indices in the estate list
     return {estate.name: index for index, estate in enumerate(estate_lib)}

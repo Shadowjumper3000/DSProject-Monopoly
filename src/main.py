@@ -126,8 +126,9 @@ class Game:
         """Moves the player token to the nearest railroad property.
 
         Runtime Complexity:
-            - Worst-case O(1): Railroad properties are a fixed small number; calculations involve constant time operations.
-            - Average-case O(1): Same as worst-case.
+            - Worst-case O(n): Where n is the number of steps properties a player needs to make to reach the railroad, since the move_player_to method is called.
+            and it calls the move_player method, which has a worst-case complexity of O(n), where n is the number of steps. In the 
+            - Average-case O(n): Same as worst-case.
         """
         railroads = [
             "Kings Cross Station",
@@ -197,14 +198,9 @@ class Game:
         """Moves a player to a specified location by name.
 
         Runtime Complexity:
-            - Worst-case O(E): Where E is the number of estates. In the worst case, the estate is at the end of the list.
-            - Average-case O(E): On average, it may check half of the estates.
-        """
-        """Move player to a specific location.
-
-        Args:
-            player (Player): The player to move.
-            location_name (str): The name of the location to move to.
+            - Worst-case O(N): Where N is the number of estates the player has to move through to reach the location, since the move_player method iterates through N steps. In the worst case, the location the
+             player has to reach is one position behind them, so they have to move through all the estates.
+            - Average-case O(N): Same as worst-case.
         """
         try:
             target_position = next(
@@ -223,8 +219,8 @@ class Game:
         """Displays the current player's information, including properties and cards.
 
         Runtime Complexity:
-            - Worst-case O(P): Where P is the number of properties and cards the player has. Iterates over properties and cards.
-            - Average-case O(P): Same as worst-case.
+            - Worst-case O(N + M): Where N is the number of properties and M is the number of cards the player has. Iterates over properties and cards.
+            - Average-case O(N + M): Same as worst-case.
         """
         current_player = self.players[self.current_player_index]
         info_x = 720
@@ -296,8 +292,8 @@ class Game:
         """Rolls the dice for the current player and moves them accordingly.
 
         Runtime Complexity:
-            - Worst-case O(1): Dice roll and player movement are based on a fixed range.
-            - Average-case O(1): Same as worst-case.
+            - Worst-case O(N): Dice roll is constant time. Calls move_player method with a worst-case complexity of O(N), where N is the number of steps moved.
+            - Average-case O(N): Same as worst-case.
         """
         if not self.dice_rolled:
             dice_roll = random.randint(1, 6) + random.randint(1, 6)
@@ -319,15 +315,8 @@ class Game:
         """Moves the player's token a specified number of steps on the board.
 
         Runtime Complexity:
-            - Worst-case O(S): Where S is the number of steps moved (maximum of 12).
-            - Average-case O(S): Average dice roll results in a small constant S.
-        """
-        """
-        Move the player a certain number of steps on the board.
-
-        Args:
-            player (Player): The player to move.
-            steps (int): The number of steps to move the player.
+            - Worst-case O(N): Where N is the number of steps moved. Iterates over the steps to move the player. 
+            - Average-case O(N): Same as worst-case.
         """
         if player.in_jail:
             self.handle_jail_turn(player)
@@ -358,9 +347,6 @@ class Game:
         print(f"{player.name} is currently on {current_estate.name}")
         print(f"{player.name} has ${player.balance}")
         print(f"{player.name} currently owns:")
-        for estate in player.estates:
-            status = "(Mortgaged)" if estate.mortgaged else ""
-            print(f"  - {estate.name} {status}")
 
         if current_estate.group == "Tax":
             player.update_balance(-current_estate.price)
@@ -392,8 +378,9 @@ class Game:
         """Allows the current player to build a house on a property they own.
 
         Runtime Complexity:
-            - Worst-case O(G): Where G is the number of properties in the group. Checks ownership of each property in the group.
-            - Average-case O(G): Same as worst-case.
+            - Worst-case O(N): Where N is the number of properties in the group. Checks ownership of each property in the group, when calling build_house method.
+              The worst case for build_house method is O(N), where N is the number of properties in the group.
+            - Average-case O(N): Same as worst-case.
         """
         player = self.players[self.current_player_index]
         current_estate = self.estates[player.position]
@@ -421,8 +408,8 @@ class Game:
         """Displays a message on the screen for a brief duration.
 
         Runtime Complexity:
-            - Worst-case O(L): Where L is the number of lines after text wrapping.
-            - Average-case O(L): Same as worst-case.
+            - Worst-case O(N): Where N is the number of lines after text wrapping.
+            - Average-case O(N): Same as worst-case.
         """
         message_rect = pygame.Rect(200, 250, 600, 100)  # Centered on the screen
         pygame.draw.rect(self.screen, (255, 255, 255), message_rect)
@@ -472,8 +459,8 @@ class Game:
         """Draws a Chance card for the player and applies its effects.
 
         Runtime Complexity:
-            - Worst-case O(1): Drawing a card and applying effects are constant time operations.
-            - Average-case O(1): Same as worst-case.
+            - Worst-case O(n): This function calls the apply_effect method, which in some cases requires calling the move_to method, which has a worst-case complexity of O(n), where n is the number of steps moved.
+            - Average-case O(1): Since in a majority of cases the effect is applied directly without moving the player.
         """
         self.current_card = self.chance_deck.draw_card()
         self.display_card(self.current_card)
@@ -488,8 +475,8 @@ class Game:
         """Draws a Community Chest card for the player and applies its effects.
 
         Runtime Complexity:
-            - Worst-case O(1): Drawing a card and applying effects are constant time operations.
-            - Average-case O(1): Same as worst-case.
+            - Worst-case O(n): This function calls the apply_effect method, which in some cases requires calling the move_to method, which has a worst-case complexity of O(n), where n is the number of steps moved.
+            - Average-case O(1): Since in a majority of cases the effect is applied directly without moving the player.
         """
         self.current_card = self.community_chest_deck.draw_card()
         self.display_card(self.current_card)
@@ -503,9 +490,14 @@ class Game:
         """Handles click events on the game interface.
 
         Runtime Complexity:
-            - Worst-case O(B): Where B is the number of buttons and interactive elements.
-            - Average-case O(B): Same as worst-case.
+            - Worst-case O(E log E + E + B + T):
+                - O(E log E): From `calculate_mortgage_efficiency`, which sorts E properties.
+                - O(E): Iterates over E properties and mortgaged properties.
+                - O(B): Iterates over B buttons.
+                - O(T): Time taken by trade handling methods (`handle_select_player_click`, etc.).
+            - Average-case O(E log E + E + B + T): Same as worst-case.
         """
+        # Handle card display dismissal
         if hasattr(self, "current_card") and self.current_card:
             card_rect = pygame.Rect(350, 300, 300, 100)
             if card_rect.collidepoint(pos):
@@ -513,6 +505,7 @@ class Game:
                 self.update_board()
                 return
 
+        # Handle mortgage popup interactions
         if hasattr(self, "mortgage_popup_active") and self.mortgage_popup_active:
             popup_rect = pygame.Rect(100, 100, 600, 500)
             if not popup_rect.collidepoint(pos):
@@ -554,6 +547,7 @@ class Game:
                         return
                     button_y += button_height + button_margin
 
+        # Handle trade popup interactions
         if hasattr(self, "trade_popup_active") and self.trade_popup_active:
             if self.trade_stage == "select_player":
                 self.handle_select_player_click(pos)
@@ -603,8 +597,9 @@ class Game:
         """Facilitates the purchase of an estate by a player.
 
         Runtime Complexity:
-            - Worst-case O(E): Where E is the number of estates the player owns. Checks for complete groups.
-            - Average-case O(E): Same as worst-case.
+            - Worst-case O(n * m): Where n is the number of estates the player owns and m is the total number of estates.
+              Iterates over the player's estates and all estates to check for groups.
+            - Average-case O(n * m): Same as worst-case.
         """
         if player.balance >= estate.price:
             player.update_balance(-estate.price)
@@ -644,8 +639,8 @@ class Game:
         """Displays the trading menu based on the current trading stage.
 
         Runtime Complexity:
-            - Worst-case O(P): Where P is the number of players or properties displayed.
-            - Average-case O(P): Same as worst-case.
+            - Worst-case O(n + m): Where n is the number of players and m is the number of properties owned by the trade_with_player.
+            - Average-case O(n + m): Same as worst-case.
         """
         """Display the trading menu based on the current stage."""
         popup_rect = pygame.Rect(150, 100, 700, 500)
@@ -822,8 +817,8 @@ class Game:
         """Handles property selection during a trade.
 
         Runtime Complexity:
-            - Worst-case O(E): Where E is the number of properties the other player owns.
-            - Average-case O(E): Same as worst-case.
+            - Worst-case O(N): Where N is the number of properties the other player owns.
+            - Average-case O(N): Same as worst-case.
         """
         popup_rect = pygame.Rect(150, 100, 700, 500)
         button_height = 40
@@ -954,17 +949,10 @@ class Game:
         """Calculates the efficiency score for mortgaging each property.
 
         Runtime Complexity:
-            - Worst-case O(E): Where E is the number of properties the player owns.
-            - Average-case O(E): Same as worst-case.
+            - Worst-case O(nlogn): Where n is the number of properties the player owns.
+            - Average-case O(nlogn): Same as worst-case.
         """
-        """Calculate mortgage efficiency score for each mortgagable property.
 
-        Args:
-            player (Player): The player who wants to mortgage properties.
-
-        Returns:
-            List[Tuple[Estate, float]]: A list of tuples containing the estate and its efficiency score.
-        """
         properties = []
         for estate in player.estates:
             if not estate.mortgaged:
@@ -979,8 +967,8 @@ class Game:
         """Displays a popup with mortgage recommendations.
 
         Runtime Complexity:
-            - Worst-case O(E): Where E is the number of properties to display.
-            - Average-case O(E): Same as worst-case.
+            - Worst-case O(NlogN + M): Calls calculate_mortgage_efficiency method with a worst-case complexity of O(NlogN) and M is the number of properties that are mortgaged.
+            - Average-case O(NlogN + M): Same as worst-case.
         """
         self.mortgage_popup_active = True
         self.mortgage_popup_player = player
@@ -1038,8 +1026,8 @@ class Game:
         """Ends the current player's turn and advances to the next player.
 
         Runtime Complexity:
-            - Worst-case O(1): Updates indices and states.
-            - Average-case O(1): Same as worst-case.
+            - Worst-case O(N + M): 
+            - Average-case O(N + M): Same as worst-case.
         """
         print(f"Turn ended for {self.players[self.current_player_index].name}")
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
