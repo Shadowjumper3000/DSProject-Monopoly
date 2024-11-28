@@ -1102,8 +1102,8 @@ class Game:
         """Renders interactive buttons on the game interface.
 
         Runtime Complexity:
-            - Worst-case O(B): Where B is the number of buttons.
-            - Average-case O(B): Same as worst-case.
+            - Worst-case O(N): Where N is the number of buttons.
+            - Average-case O(N): Same as worst-case.
         """
         for button in self.buttons:
             color = (0, 0, 0) if button["enabled"] else (128, 128, 128)
@@ -1253,8 +1253,8 @@ class Game:
         """Starts the game loop, handling setups and main gameplay.
 
         Runtime Complexity:
-            - Worst-case O(T): Where T is the number of game ticks/events processed.
-            - Average-case O(T): Depends on user interaction and game duration.
+            - Worst-case O(N): Where N is the number of game ticks/events processed.
+            - Average-case O(N): Depends on user interaction and game duration.
         """
         while self.running:
             if self.setup_phase:
@@ -1280,7 +1280,7 @@ class Game:
         """Applies the effect of a drawn card to the player.
 
         Runtime Complexity:
-            - Worst-case O(N): May involve moving the player or modifying properties. Where N is the number of properties.
+            - Worst-case O(N): May involve moving the player or modifying properties. Where N is the number of estates to search through.
             - Average-case O(1): Most effects are simple state changes.
         """
         print(f"Applying effect of card: {card.description}")
