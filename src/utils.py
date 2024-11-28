@@ -1,3 +1,8 @@
+"""
+Utils module containing utility functions and classes.
+"""
+
+
 class Node:
     def __init__(self, data):
         self.data = data
@@ -10,6 +15,12 @@ class LinkedList:
 
     # Adds a new node with the given data to the end of the linked list
     def append(self, data):
+        """
+        Adds a new node with the given data to the end of the linked list.
+
+        Time Complexity:
+            O(n): where n is the number of nodes in the linked list
+        """
         new_node = Node(data)
         if not self.head:
             self.head = new_node
@@ -21,6 +32,12 @@ class LinkedList:
 
     # Returns a list of all data elements in the linked list
     def display(self):
+        """
+        Returns a list of all data elements in the linked list.
+
+        Time Complexity:
+            O(n): where n is the number of nodes in the linked list
+        """
         elems = []
         current = self.head
         while current:
@@ -30,6 +47,12 @@ class LinkedList:
 
     # Removes the first node with the specified data (key) from the list
     def remove(self, key):
+        """
+        Removes the first node with the specified data (key) from the list.
+
+        Time Complexity:
+            O(n): where n is the number of nodes in the linked list
+        """
         current = self.head
         if current and current.data == key:
             self.head = current.next
@@ -53,9 +76,22 @@ class Queue:
         return self.items.head is None
 
     def enqueue(self, item):
+        """
+        Adds an item to the end of the queue.
+
+        Time Complexity:
+            O(1)
+        """
         self.items.append(item)
 
     def dequeue(self):
+        """
+        Removes and returns the item at the front of the queue.
+        Raises an IndexError if the queue is empty.
+
+        Time Complexity:
+            O(1)
+        """
         if self.is_empty():
             raise IndexError("Dequeue from empty queue")
         dequeued_item = self.items.head.data
@@ -64,6 +100,13 @@ class Queue:
 
     # Returns the item at the front of the queue without removing it
     def peek(self):
+        """
+        Returns the item at the front of the queue without removing it.
+        Raises an IndexError if the queue is empty.
+
+        Time Complexity:
+            O(1)
+        """
         if self.is_empty():
             raise IndexError("Peek from empty queue")
         return self.items.head.data
@@ -84,6 +127,9 @@ def wrap_text(text, font, max_width):
 
     Returns:
         str: Wrapped text
+
+    Time Complexity:
+        O(n): where n is the number of words in the text
     """
     words = text.split(" ")
     lines = []
@@ -112,6 +158,9 @@ def quick_sorts(arr, key=lambda x: x, reverse=False):
 
     Returns:
         list: The sorted array.
+    Time Complexity:
+        Average case: O(n log n)
+        Worst case: O(n^2)
     """
     if len(arr) <= 1:
         return arr
@@ -120,6 +169,10 @@ def quick_sorts(arr, key=lambda x: x, reverse=False):
     middle = [x for x in arr if key(x) == pivot]
     right = [x for x in arr if key(x) > pivot]
     if reverse:
-        return quick_sorts(right, key, reverse) + middle + quick_sorts(left, key, reverse)
+        return (
+            quick_sorts(right, key, reverse) + middle + quick_sorts(left, key, reverse)
+        )
     else:
-        return quick_sorts(left, key, reverse) + middle + quick_sorts(right, key, reverse)
+        return (
+            quick_sorts(left, key, reverse) + middle + quick_sorts(right, key, reverse)
+        )
