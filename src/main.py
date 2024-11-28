@@ -15,6 +15,12 @@ from utils import wrap_text
 
 class Game:
     def __init__(self):
+        """Initializes the game by setting up players, estates, decks, and the game board.
+
+        Runtime Complexity:
+            - Worst-case O(N): Where N is the total number of estates and players. Initialization involves creating and initializing lists.
+            - Average-case O(N): Similar to worst-case as initialization processes a fixed number of items.
+        """
         pygame.init()  # Initialize Pygame
         self.screen = pygame.display.set_mode((1000, 700))  # Extended width to 1000
         pygame.display.set_caption("Monopoly")
@@ -86,6 +92,12 @@ class Game:
         self.input_active = False
 
     def mortgage_property(self, player, estate):
+        """Mortgages a property for a player and updates their balance accordingly.
+
+        Runtime Complexity:
+            - Worst-case O(1): Basic arithmetic and property state changes are constant time operations.
+            - Average-case O(1): Same as worst-case.
+        """
         if estate.mortgage():
             player.update_balance(estate.price // 2)
             print(f"{player.name} mortgaged {estate.name} for ${estate.price // 2}")
@@ -93,6 +105,12 @@ class Game:
             print(f"{player.name} could not mortgage {estate.name}")
 
     def move_to_nearest_utility(self, player):
+        """Moves the player token to the nearest utility property.
+
+        Runtime Complexity:
+            - Worst-case O(n): Where n is the number of utility properties. Iterates over all utility properties. Utility positions are fixed and can be found in dictirionary.
+            - Average-case O(n): Same as worst-case.
+        """
         utilities = ["Electric Company", "Water Works"]
         current_position = player.position
         nearest_utility = min(
@@ -105,6 +123,12 @@ class Game:
         self.move_player_to(player, nearest_utility)
 
     def move_to_nearest_railroad(self, player):
+        """Moves the player token to the nearest railroad property.
+
+        Runtime Complexity:
+            - Worst-case O(1): Railroad properties are a fixed small number; calculations involve constant time operations.
+            - Average-case O(1): Same as worst-case.
+        """
         railroads = [
             "Kings Cross Station",
             "Marylebone Station",
@@ -122,6 +146,12 @@ class Game:
         self.move_player_to(player, nearest_railroad)
 
     def go_to_jail(self, player):
+        """Sends the player to jail and updates their status.
+
+        Runtime Complexity:
+            - Worst-case O(1): Directly updates player's position and status.
+            - Average-case O(1): Same as worst-case.
+        """
         player.position = self.get_estate_position_by_name("Jail")
         if player.community_chest_cards:
             self.display_message(
@@ -134,10 +164,22 @@ class Game:
             player.jail_turns = 0
 
     def get_out_of_jail(self, player):
+        """Releases the player from jail and resets their jail turn counter.
+
+        Runtime Complexity:
+            - Worst-case O(1): Updates player's status in constant time.
+            - Average-case O(1): Same as worst-case.
+        """
         player.in_jail = False
         player.jail_turns = 0
 
     def handle_jail_turn(self, player):
+        """Handles a player's turn if they are currently in jail.
+
+        Runtime Complexity:
+            - Worst-case O(1): Checks and updates player's jail status.
+            - Average-case O(1): Same as worst-case.
+        """
         if player.in_jail:
             player.jail_turns += 1
             if player.jail_turns >= 3:
@@ -150,9 +192,21 @@ class Game:
                 print(f"{player.name} is in jail for {player.jail_turns} turns")
 
     def get_estate_position_by_name(self, name):
+        """Retrieves the position index of an estate by its name.
+
+        Runtime Complexity:
+            - Worst-case O(1): Dictionary lookup is a constant time operation.
+            - Average-case O(1): Same as worst-case.
+        """
         return self.estate_dict[name]
 
     def move_player_to(self, player, location_name):
+        """Moves a player to a specified location by name.
+
+        Runtime Complexity:
+            - Worst-case O(E): Where E is the number of estates. In the worst case, the estate is at the end of the list.
+            - Average-case O(E): On average, it may check half of the estates.
+        """
         """Move player to a specific location.
 
         Args:
@@ -173,6 +227,12 @@ class Game:
             print(f"Estate with name '{location_name}' not found")
 
     def draw_player_info(self):
+        """Displays the current player's information, including properties and cards.
+
+        Runtime Complexity:
+            - Worst-case O(P): Where P is the number of properties and cards the player has. Iterates over properties and cards.
+            - Average-case O(P): Same as worst-case.
+        """
         current_player = self.players[self.current_player_index]
         info_x = 720
         info_y = 230  # Start at the top of the right side
@@ -240,6 +300,12 @@ class Game:
             info_y += line_height
 
     def roll_dice(self):
+        """Rolls the dice for the current player and moves them accordingly.
+
+        Runtime Complexity:
+            - Worst-case O(1): Dice roll and player movement are based on a fixed range.
+            - Average-case O(1): Same as worst-case.
+        """
         if not self.dice_rolled:
             dice_roll = random.randint(1, 6) + random.randint(1, 6)
             dice_roll = 2
@@ -257,6 +323,12 @@ class Game:
             print("You have already rolled the dice this turn.")
 
     def move_player(self, player, steps):
+        """Moves the player's token a specified number of steps on the board.
+
+        Runtime Complexity:
+            - Worst-case O(S): Where S is the number of steps moved (maximum of 12).
+            - Average-case O(S): Average dice roll results in a small constant S.
+        """
         """
         Move the player a certain number of steps on the board.
 
@@ -283,6 +355,12 @@ class Game:
         self.handle_estate(player)
 
     def handle_estate(self, player):
+        """Handles the logic when a player lands on an estate.
+
+        Runtime Complexity:
+            - Worst-case O(1): Involves conditional checks and method calls that are constant time.
+            - Average-case O(1): Same as worst-case.
+        """
         current_estate = self.estates[player.position]
         print(f"{player.name} is currently on {current_estate.name}")
         print(f"{player.name} has ${player.balance}")
@@ -308,10 +386,22 @@ class Game:
                 self.buttons[1]["enabled"] = True  # Enable "Buy Property" button
 
     def offer_mortgage(self, player):
+        """Offers the player an option to mortgage properties.
+
+        Runtime Complexity:
+            - Worst-case O(1): Initiates the mortgage popup.
+            - Average-case O(1): Same as worst-case.
+        """
         print(f"{player.name} is offered to mortgage a property")
         self.display_mortgage_popup(player)
 
     def handle_build_house(self):
+        """Allows the current player to build a house on a property they own.
+
+        Runtime Complexity:
+            - Worst-case O(G): Where G is the number of properties in the group. Checks ownership of each property in the group.
+            - Average-case O(G): Same as worst-case.
+        """
         player = self.players[self.current_player_index]
         current_estate = self.estates[player.position]
         if current_estate.owner == player:
@@ -335,6 +425,12 @@ class Game:
                 )
 
     def display_message(self, message):
+        """Displays a message on the screen for a brief duration.
+
+        Runtime Complexity:
+            - Worst-case O(L): Where L is the number of lines after text wrapping.
+            - Average-case O(L): Same as worst-case.
+        """
         message_rect = pygame.Rect(200, 250, 600, 100)  # Centered on the screen
         pygame.draw.rect(self.screen, (255, 255, 255), message_rect)
         pygame.draw.rect(self.screen, (0, 0, 0), message_rect, 2)
@@ -352,6 +448,12 @@ class Game:
         self.update_board()
 
     def display_card(self, card):
+        """Displays a card's information on the screen.
+
+        Runtime Complexity:
+            - Worst-case O(L): Where L is the number of lines after text wrapping.
+            - Average-case O(L): Same as worst-case.
+        """
         # Log the type and attributes of the card object
 
         card_rect = pygame.Rect(200, 220, 300, 300)  # Centered on the 700x700 board
@@ -374,6 +476,12 @@ class Game:
         print("Card displayed")
 
     def draw_chance_card(self, player):
+        """Draws a Chance card for the player and applies its effects.
+
+        Runtime Complexity:
+            - Worst-case O(1): Drawing a card and applying effects are constant time operations.
+            - Average-case O(1): Same as worst-case.
+        """
         self.current_card = self.chance_deck.draw_card()
         self.display_card(self.current_card)
         self.apply_effect(
@@ -384,6 +492,12 @@ class Game:
         self.current_card = None
 
     def draw_community_chest_card(self, player):
+        """Draws a Community Chest card for the player and applies its effects.
+
+        Runtime Complexity:
+            - Worst-case O(1): Drawing a card and applying effects are constant time operations.
+            - Average-case O(1): Same as worst-case.
+        """
         self.current_card = self.community_chest_deck.draw_card()
         self.display_card(self.current_card)
         print(
@@ -393,6 +507,12 @@ class Game:
         self.current_card = None
 
     def handle_click(self, pos):
+        """Handles click events on the game interface.
+
+        Runtime Complexity:
+            - Worst-case O(B): Where B is the number of buttons and interactive elements.
+            - Average-case O(B): Same as worst-case.
+        """
         if hasattr(self, "current_card") and self.current_card:
             card_rect = pygame.Rect(350, 300, 300, 100)
             if card_rect.collidepoint(pos):
@@ -401,36 +521,36 @@ class Game:
                 return
 
         if hasattr(self, "mortgage_popup_active") and self.mortgage_popup_active:
-            popup_rect = pygame.Rect(200, 150, 300, 400)
+            popup_rect = pygame.Rect(100, 100, 600, 500)
             if not popup_rect.collidepoint(pos):
                 self.mortgage_popup_active = False
                 self.update_board()
                 return
 
             button_height = 40
-            button_width = 260
+            button_width = 560
             button_margin = 10
-            button_y = popup_rect.y + 60
+            button_y = popup_rect.y + 80
 
-            # Handle not mortgaged properties
-            button_y += button_height  # Skip the "Not Mortgaged" title
-            for estate in self.mortgage_popup_player.estates:
-                if not estate.mortgaged:
-                    button_rect = pygame.Rect(
-                        popup_rect.x + 20, button_y, button_width, button_height
-                    )
-                    if button_rect.collidepoint(pos):
-                        self.mortgage_property(self.mortgage_popup_player, estate)
-                        self.mortgage_popup_active = False
-                        self.update_board()
-                        return
-                    button_y += button_height + button_margin
+            # Handle recommended properties to mortgage
+            properties = self.calculate_mortgage_efficiency(self.mortgage_popup_player)
+            for estate, score in properties:
+                button_rect = pygame.Rect(
+                    popup_rect.x + 20, button_y, button_width, button_height
+                )
+                if button_rect.collidepoint(pos):
+                    self.mortgage_property(self.mortgage_popup_player, estate)
+                    self.mortgage_popup_active = False
+                    self.update_board()
+                    return
+                button_y += button_height + button_margin
 
             # Handle mortgaged properties
-            button_y += button_margin  # Add some space between the two categories
-            button_y += button_height  # Skip the "Mortgaged" title
-            for estate in self.mortgage_popup_player.estates:
-                if estate.mortgaged:
+            mortgaged_properties = [estate for estate in self.mortgage_popup_player.estates if estate.mortgaged]
+            if mortgaged_properties:
+                button_y += button_margin  # Skip the "Mortgaged Properties" title
+                button_y += button_height
+                for estate in mortgaged_properties:
                     button_rect = pygame.Rect(
                         popup_rect.x + 20, button_y, button_width, button_height
                     )
@@ -456,6 +576,12 @@ class Game:
                 button["action"]()
 
     def unmortgage_property(self, player, estate):
+        """Unmortgages a property for a player and updates their balance accordingly.
+
+        Runtime Complexity:
+            - Worst-case O(1): Basic arithmetic and property state changes are constant time operations.
+            - Average-case O(1): Same as worst-case.
+        """
         if estate.unmortgage():
             player.update_balance(-estate.price)
             print(f"{player.name} unmortgaged {estate.name} for ${estate.price}")
@@ -463,6 +589,12 @@ class Game:
             print(f"{player.name} could not unmortgage {estate.name}")
 
     def handle_buy(self):
+        """Processes the buying action when the current player chooses to buy a property.
+
+        Runtime Complexity:
+            - Worst-case O(1): Calls another method with constant time operations.
+            - Average-case O(1): Same as worst-case.
+        """
         player = self.players[self.current_player_index]
         current_estate = self.estates[player.position]
         if current_estate.buyable and current_estate.owner is None:
@@ -475,6 +607,12 @@ class Game:
         self.update_board()
 
     def buy_estate(self, player, estate):
+        """Facilitates the purchase of an estate by a player.
+
+        Runtime Complexity:
+            - Worst-case O(E): Where E is the number of estates the player owns. Checks for complete groups.
+            - Average-case O(E): Same as worst-case.
+        """
         if player.balance >= estate.price:
             player.update_balance(-estate.price)
             estate.owner = player
@@ -494,6 +632,12 @@ class Game:
         return False
 
     def handle_trade(self):
+        """Initiates the trading process between players.
+
+        Runtime Complexity:
+            - Worst-case O(1): Sets up variables for the trade.
+            - Average-case O(1): Same as worst-case.
+        """
         """Initiate the trading process."""
         self.trade_popup_active = True
         self.trade_stage = "select_player"
@@ -504,6 +648,12 @@ class Game:
         self.update_board()
 
     def display_trade_menu(self):
+        """Displays the trading menu based on the current trading stage.
+
+        Runtime Complexity:
+            - Worst-case O(P): Where P is the number of players or properties displayed.
+            - Average-case O(P): Same as worst-case.
+        """
         """Display the trading menu based on the current stage."""
         popup_rect = pygame.Rect(150, 100, 700, 500)
         pygame.draw.rect(self.screen, (255, 255, 255), popup_rect)
@@ -650,6 +800,12 @@ class Game:
         pygame.display.flip()
 
     def handle_select_player_click(self, pos):
+        """Handles player selection during a trade.
+
+        Runtime Complexity:
+            - Worst-case O(N): Where N is the number of players.
+            - Average-case O(N): Same as worst-case.
+        """
         popup_rect = pygame.Rect(150, 100, 700, 500)
         button_height = 50
         button_width = 200
@@ -670,6 +826,12 @@ class Game:
                 button_y += button_height + button_margin
 
     def handle_select_property_click(self, pos):
+        """Handles property selection during a trade.
+
+        Runtime Complexity:
+            - Worst-case O(E): Where E is the number of properties the other player owns.
+            - Average-case O(E): Same as worst-case.
+        """
         popup_rect = pygame.Rect(150, 100, 700, 500)
         button_height = 40
         button_width = 660
@@ -690,6 +852,12 @@ class Game:
             button_y += button_height + button_margin
 
     def handle_enter_offer_click(self, pos):
+        """Processes the offer input during a trade.
+
+        Runtime Complexity:
+            - Worst-case O(1): Validates input and updates state.
+            - Average-case O(1): Same as worst-case.
+        """
         popup_rect = pygame.Rect(150, 100, 700, 500)
         input_box = pygame.Rect(popup_rect.x + 250, popup_rect.y + 80, 200, 50)
         submit_button = pygame.Rect(popup_rect.x + 300, popup_rect.y + 150, 100, 40)
@@ -711,6 +879,12 @@ class Game:
             print("Invalid offer amount.")
 
     def handle_confirm_trade_click(self, pos):
+        """Handles the confirmation or rejection of a trade offer.
+
+        Runtime Complexity:
+            - Worst-case O(1): Updates player properties and balances.
+            - Average-case O(1): Same as worst-case.
+        """
         popup_rect = pygame.Rect(150, 100, 700, 500)
         accept_button = pygame.Rect(popup_rect.x + 200, popup_rect.y + 150, 100, 40)
         decline_button = pygame.Rect(popup_rect.x + 400, popup_rect.y + 150, 100, 40)
@@ -740,6 +914,12 @@ class Game:
             self.update_board()
 
     def handle_keydown(self, event):
+        """Handles keydown events during inputs.
+
+        Runtime Complexity:
+            - Worst-case O(1): Processes a single key event.
+            - Average-case O(1): Same as worst-case.
+        """
         if (
             self.trade_popup_active
             and self.trade_stage == "enter_offer"
@@ -764,6 +944,12 @@ class Game:
             pass
 
     def handle_mortgage(self):
+        """Initiates the mortgage process for the current player.
+
+        Runtime Complexity:
+            - Worst-case O(1): Checks if player has properties and displays mortgage options.
+            - Average-case O(1): Same as worst-case.
+        """
         player = self.players[self.current_player_index]
         if not player.estates:
             print(f"{player.name} has no properties to mortgage.")
@@ -771,46 +957,79 @@ class Game:
 
         self.display_mortgage_popup(player)
 
+    def calculate_mortgage_efficiency(self, player):
+        """Calculates the efficiency score for mortgaging each property.
+
+        Runtime Complexity:
+            - Worst-case O(E): Where E is the number of properties the player owns.
+            - Average-case O(E): Same as worst-case.
+        """
+        """Calculate mortgage efficiency score for each mortgagable property.
+
+        Args:
+            player (Player): The player who wants to mortgage properties.
+
+        Returns:
+            List[Tuple[Estate, float]]: A list of tuples containing the estate and its efficiency score.
+        """
+        properties = []
+        for estate in player.estates:
+            if not estate.mortgaged:
+                future_income_lost = estate.get_current_rent(self)  # Pass game instance
+                mortgage_value = estate.price // 2
+                efficiency_score = mortgage_value / future_income_lost if future_income_lost != 0 else 0
+                properties.append((estate, efficiency_score))
+        properties.sort(key=lambda x: x[1], reverse=True)
+        return properties
+
     def display_mortgage_popup(self, player):
+        """Displays a popup with mortgage recommendations.
+
+        Runtime Complexity:
+            - Worst-case O(E): Where E is the number of properties to display.
+            - Average-case O(E): Same as worst-case.
+        """
         self.mortgage_popup_active = True
         self.mortgage_popup_player = player
 
-        popup_rect = pygame.Rect(200, 150, 300, 400)  # Centered on the 700x700 board
+        # Increased popup size for better display
+        popup_rect = pygame.Rect(100, 100, 600, 500)  
         pygame.draw.rect(self.screen, (255, 255, 255), popup_rect)
         pygame.draw.rect(self.screen, (0, 0, 0), popup_rect, 2)
 
-        title_text = self.font.render("Mortgage Property", True, (0, 0, 0))
+        title_text = self.font.render("Mortgage Property Recommendations", True, (0, 0, 0))
         self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
 
+        properties = self.calculate_mortgage_efficiency(player)
+
+        # Display recommended properties to mortgage
         button_height = 40
-        button_width = 260
+        button_width = 560
         button_margin = 10
-        button_y = popup_rect.y + 60
+        button_y = popup_rect.y + 80
 
-        # Display not mortgaged properties
-        not_mortgaged_text = self.font.render("Not Mortgaged", True, (0, 0, 0))
-        self.screen.blit(not_mortgaged_text, (popup_rect.x + 20, button_y))
-        button_y += button_height
+        for estate, score in properties:
+            button_rect = pygame.Rect(
+                popup_rect.x + 20, button_y, button_width, button_height
+            )
+            pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
+            pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
+            estate_text = self.font.render(
+                f"{estate.name} - Efficiency Score: {score:.2f}", True, (0, 0, 0)
+            )
+            self.screen.blit(estate_text, (button_rect.x + 10, button_rect.y + 10))
+            button_y += button_height + button_margin
 
-        for estate in player.estates:
-            if not estate.mortgaged:
-                button_rect = pygame.Rect(
-                    popup_rect.x + 20, button_y, button_width, button_height
-                )
-                pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
-                pygame.draw.rect(self.screen, (0, 0, 0), button_rect, 2)
-                estate_text = self.font.render(estate.name, True, (0, 0, 0))
-                self.screen.blit(estate_text, (button_rect.x + 10, button_rect.y + 10))
-                button_y += button_height + button_margin
+        # Display mortgaged properties separately
+        mortgaged_properties = [estate for estate in player.estates if estate.mortgaged]
 
-        # Display mortgaged properties
-        button_y += button_margin  # Add some space between the two categories
-        mortgaged_text = self.font.render("Mortgaged", True, (0, 0, 0))
-        self.screen.blit(mortgaged_text, (popup_rect.x + 20, button_y))
-        button_y += button_height
+        if mortgaged_properties:
+            button_y += button_margin  # Add space before mortgaged properties
+            mortgaged_text = self.font.render("Mortgaged Properties", True, (0, 0, 0))
+            self.screen.blit(mortgaged_text, (popup_rect.x + 20, button_y))
+            button_y += button_height
 
-        for estate in player.estates:
-            if estate.mortgaged:
+            for estate in mortgaged_properties:
                 button_rect = pygame.Rect(
                     popup_rect.x + 20, button_y, button_width, button_height
                 )
@@ -823,6 +1042,12 @@ class Game:
         pygame.display.flip()
 
     def end_turn(self):
+        """Ends the current player's turn and advances to the next player.
+
+        Runtime Complexity:
+            - Worst-case O(1): Updates indices and states.
+            - Average-case O(1): Same as worst-case.
+        """
         print(f"Turn ended for {self.players[self.current_player_index].name}")
         self.current_player_index = (self.current_player_index + 1) % len(self.players)
         self.dice_rolled = False
@@ -830,6 +1055,12 @@ class Game:
         self.update_board()
 
     def update_buttons(self):
+        """Updates the state (enabled/disabled) of action buttons based on game conditions.
+
+        Runtime Complexity:
+            - Worst-case O(G): Where G is the number of properties in a group (for ownership checks).
+            - Average-case O(G): Same as worst-case.
+        """
         player = self.players[self.current_player_index]
         current_estate = self.estates[player.position]
         self.buttons[0][
@@ -858,6 +1089,12 @@ class Game:
         ] = self.dice_rolled  # Enable "End Turn" button only if dice rolled
 
     def draw_buttons(self):
+        """Renders interactive buttons on the game interface.
+
+        Runtime Complexity:
+            - Worst-case O(B): Where B is the number of buttons.
+            - Average-case O(B): Same as worst-case.
+        """
         for button in self.buttons:
             color = (0, 0, 0) if button["enabled"] else (128, 128, 128)
             pygame.draw.rect(self.screen, color, button["rect"])
@@ -880,6 +1117,12 @@ class Game:
             self.screen.blit(text, text_rect)
 
     def draw_tokens(self):
+        """Draws player tokens and property indicators on the game board.
+
+        Runtime Complexity:
+            - Worst-case O(P + E): Where P is the number of players and E is the number of estates with houses/hotels.
+            - Average-case O(P + E): Same as worst-case.
+        """
         color_offsets = {
             "red": (0, 0),
             "blue": (10, 0),
@@ -927,6 +1170,12 @@ class Game:
                     pygame.draw.rect(self.screen, (0, 255, 0), house_rect)
 
     def update_board(self):
+        """Updates the game board visuals, including tokens and player info.
+
+        Runtime Complexity:
+            - Worst-case O(P + B + E): Combines complexities of drawing tokens, buttons, and other elements.
+            - Average-case O(P + B + E): Same as worst-case.
+        """
         self.screen.blit(self.background, (0, 0))
         self.draw_buttons()
         self.draw_tokens()
@@ -940,6 +1189,12 @@ class Game:
         pygame.display.flip()
 
     def draw_setup_screen(self):
+        """Displays the setup screen for initializing the game.
+
+        Runtime Complexity:
+            - Worst-case O(1): Renders static text and input field.
+            - Average-case O(1): Same as worst-case.
+        """
         self.screen.fill((255, 255, 255))
         if self.current_setup_step == 0:
             prompt = "Enter the number of players:"
@@ -953,6 +1208,12 @@ class Game:
         pygame.display.flip()
 
     def handle_setup_event(self, event):
+        """Handles events during the game setup phase.
+
+        Runtime Complexity:
+            - Worst-case O(1): Processes a single event.
+            - Average-case O(1): Same as worst-case.
+        """
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 if self.current_setup_step == 0:
@@ -975,6 +1236,12 @@ class Game:
                 self.input_text += event.unicode
 
     def start_game(self):
+        """Starts the game loop, handling setups and main gameplay.
+
+        Runtime Complexity:
+            - Worst-case O(T): Where T is the number of game ticks/events processed.
+            - Average-case O(T): Depends on user interaction and game duration.
+        """
         while self.running:
             if self.setup_phase:
                 self.draw_setup_screen()
@@ -996,6 +1263,12 @@ class Game:
         pygame.quit()
 
     def apply_effect(self, player, card):
+        """Applies the effect of a drawn card to the player.
+
+        Runtime Complexity:
+            - Worst-case O(E): May involve moving the player or modifying properties.
+            - Average-case O(1): Most effects are simple state changes.
+        """
         print(f"Applying effect of card: {card.description}")
         if card.is_get_out_of_jail:
             player.community_chest_cards.append(card)

@@ -8,6 +8,7 @@ class LinkedList:
     def __init__(self):
         self.head = None
 
+    # Adds a new node with the given data to the end of the linked list
     def append(self, data):
         new_node = Node(data)
         if not self.head:
@@ -18,6 +19,7 @@ class LinkedList:
             last = last.next
         last.next = new_node
 
+    # Returns a list of all data elements in the linked list
     def display(self):
         elems = []
         current = self.head
@@ -26,6 +28,7 @@ class LinkedList:
             current = current.next
         return elems
 
+    # Removes the first node with the specified data (key) from the list
     def remove(self, key):
         current = self.head
         if current and current.data == key:
@@ -59,11 +62,13 @@ class Queue:
         self.items.remove(dequeued_item)
         return dequeued_item
 
+    # Returns the item at the front of the queue without removing it
     def peek(self):
         if self.is_empty():
             raise IndexError("Peek from empty queue")
         return self.items.head.data
-
+    
+    # Displays the current elements of the queue
     def display(self):
         return self.items.display()
 

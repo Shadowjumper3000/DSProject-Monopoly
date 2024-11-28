@@ -10,6 +10,14 @@ class Card:
     def __init__(
         self, description, value=0, is_get_out_of_jail=False, move_to=None, multiplier=1
     ):
+        """
+        Initializes a Card object with specific attributes.
+        :param description: A string describing the card's effect.
+        :param value: A monetary value associated with the card (default is 0).
+        :param is_get_out_of_jail: Boolean indicating if the card is a "Get Out of Jail Free" card.
+        :param move_to: Specifies a board position or action to move the player to (default is None).
+        :param multiplier: A multiplier applied to certain card effects (default is 1).
+        """
         self.description = description
         self.value = value
         self.is_get_out_of_jail = is_get_out_of_jail
@@ -17,23 +25,42 @@ class Card:
         self.multiplier = multiplier
 
     def __str__(self):
+        """
+        Returns a string representation of the card.
+        :return: The card's description.
+        """
         return self.description
 
 
 class CardDeck:
     def __init__(self):
+        """
+        Initializes an empty card deck using a queue for card management.
+        """
         self.deck = Queue()
 
     def add_card(self, card):
+        """
+        Adds a card to the deck.
+        :param card: The card to be added.
+        """
         self.deck.enqueue(card)
 
     def draw_card(self):
+        """
+        Draws a card from the top of the deck.
+        :return: The card drawn from the deck.
+        :raises IndexError: If the deck is empty.
+        """
         if not self.deck.is_empty():
             return self.deck.dequeue()
         else:
             raise IndexError("The deck is empty")
 
     def shuffle(self):
+        """
+        Shuffles the deck randomly.
+        """
         cards = self.deck.display()
         random.shuffle(cards)
         self.deck = Queue()
@@ -41,11 +68,21 @@ class CardDeck:
             self.deck.enqueue(card)
 
     def __len__(self):
+        """
+        Returns the number of cards in the deck.
+        :return: The length of the deck.
+        """
         return len(self.deck)
 
 
 def initialize_chance_cards():
+    """
+    Creates and returns a list of predefined Chance cards.
+    :return: List of Card objects for the Chance deck.
+    """
     return [
+        # Each card has a description and optional effects.
+
         Card("Advance to Go. Collect $200", 0, False, "Go"),
         Card(
             "Advance to Pentonville Rd. If you pass Go, collect $200",
@@ -106,6 +143,10 @@ def initialize_chance_cards():
 
 
 def create_chance_deck():
+    """
+    Creates and returns a shuffled Chance card deck.
+    :return: Shuffled CardDeck object containing Chance cards.
+    """
     chance_deck = CardDeck()
     for card in initialize_chance_cards():
         chance_deck.add_card(card)
@@ -114,6 +155,10 @@ def create_chance_deck():
 
 
 def initialize_community_chest_cards():
+    """
+    Creates and returns a list of predefined Community Chest cards.
+    :return: List of Card objects for the Community Chest deck.
+    """
     return [
         Card("Advance to Go.", 0, False, "Go"),
         Card("Bank error in your favor. Collect $200", 200, False, None),
@@ -150,6 +195,10 @@ def initialize_community_chest_cards():
 
 
 def create_community_chest_deck():
+    """
+    Creates and returns a shuffled Community Chest card deck.
+    :return: Shuffled CardDeck object containing Community Chest cards.
+    """
     community_chest_deck = CardDeck()
     for card in initialize_community_chest_cards():
         community_chest_deck.add_card(card)
