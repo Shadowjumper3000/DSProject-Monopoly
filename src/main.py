@@ -123,8 +123,15 @@ class Game:
 
     def go_to_jail(self, player):
         player.position = self.get_estate_position_by_name("Jail")
-        player.in_jail = True
-        player.jail_turns = 0
+        if player.community_chest_cards:
+            self.display_message(
+                f"{player.name} goes to jail and uses a 'Get Out of Jail Free' card"
+            )
+            player.community_chest_cards.pop()
+            self.get_out_of_jail(player)
+        else:
+            player.in_jail = True
+            player.jail_turns = 0
 
     def get_out_of_jail(self, player):
         player.in_jail = False
@@ -172,7 +179,7 @@ class Game:
         line_height = 30
 
         # Clear the entire right side of the board
-        pygame.draw.rect(self.screen, (255, 255, 255), (info_x - 20, 0, 280, 700))
+        pygame.draw.rect(self.screen, (255, 255, 255), (info_x - 20, 0, 300, 700))
 
         # Draw buttons
         self.draw_buttons()
@@ -235,7 +242,7 @@ class Game:
     def roll_dice(self):
         if not self.dice_rolled:
             dice_roll = random.randint(1, 6) + random.randint(1, 6)
-            # dice_roll = 1
+            dice_roll = 2
             print(f"Dice rolled: {dice_roll}")
             # Display the dice roll on the screen
             dice_text = self.font.render(f"Dice: {dice_roll}", True, (0, 0, 0))
@@ -995,12 +1002,22 @@ class Game:
             print(f"{player.name} got a Get Out of Jail Free card")
         if card.move_to:
             match card.move_to:
-                case "nearest_utility":
+                case "nearest Utility":
                     self.move_to_nearest_utility(player)
-                case "nearest_railroad":
+                case "nearest Railroad":
                     self.move_to_nearest_railroad(player)
                 case "Jail":
                     self.go_to_jail(player)
+                case "Go":
+                    self.move_player_to(player, 0)
+                case "Bond Street":
+                    self.move_player_to(player, 11)
+                case "Illinois Avenue":
+                    self.move_player_to(player, 24)
+                case "Vine Street":
+                    self.move_player_to(player, 39)
+                case "Kings Cross Station":
+                    self.move_player_to(player, 5)
                 case _:
                     self.move_player_to(player, card.move_to)
         if card.value:

@@ -46,7 +46,7 @@ class CardDeck:
 
 def initialize_chance_cards():
     return [
-        Card("Advance to Go. Collect $200", 0, False, 0),
+        Card("Advance to Go. Collect $200", 0, False, "Go"),
         Card(
             "Advance to Pentonville Rd. If you pass Go, collect $200",
             0,
@@ -115,7 +115,7 @@ def create_chance_deck():
 
 def initialize_community_chest_cards():
     return [
-        Card("Advance to Go. Collect $200", 0, False, None),
+        Card("Advance to Go.", 0, False, "Go"),
         Card("Bank error in your favor. Collect $200", 200, False, None),
         Card("Doctor's fees. Pay $50", -50, False, None),
         Card("From sale of stock you get $50", 50, False, None),
