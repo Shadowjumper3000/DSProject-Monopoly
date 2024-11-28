@@ -546,7 +546,11 @@ class Game:
                 button_y += button_height + button_margin
 
             # Handle mortgaged properties
-            mortgaged_properties = [estate for estate in self.mortgage_popup_player.estates if estate.mortgaged]
+            mortgaged_properties = [
+                estate
+                for estate in self.mortgage_popup_player.estates
+                if estate.mortgaged
+            ]
             if mortgaged_properties:
                 button_y += button_margin  # Skip the "Mortgaged Properties" title
                 button_y += button_height
@@ -977,7 +981,11 @@ class Game:
             if not estate.mortgaged:
                 future_income_lost = estate.get_current_rent(self)  # Pass game instance
                 mortgage_value = estate.price // 2
-                efficiency_score = mortgage_value / future_income_lost if future_income_lost != 0 else 0
+                efficiency_score = (
+                    mortgage_value / future_income_lost
+                    if future_income_lost != 0
+                    else 0
+                )
                 properties.append((estate, efficiency_score))
         properties.sort(key=lambda x: x[1], reverse=True)
         return properties
@@ -993,11 +1001,13 @@ class Game:
         self.mortgage_popup_player = player
 
         # Increased popup size for better display
-        popup_rect = pygame.Rect(100, 100, 600, 500)  
+        popup_rect = pygame.Rect(100, 100, 600, 500)
         pygame.draw.rect(self.screen, (255, 255, 255), popup_rect)
         pygame.draw.rect(self.screen, (0, 0, 0), popup_rect, 2)
 
-        title_text = self.font.render("Mortgage Property Recommendations", True, (0, 0, 0))
+        title_text = self.font.render(
+            "Mortgage Property Recommendations", True, (0, 0, 0)
+        )
         self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
 
         properties = self.calculate_mortgage_efficiency(player)
@@ -1162,8 +1172,12 @@ class Game:
                     row = i // 2
                     col = i % 2
                     house_rect = pygame.Rect(
-                        estate_position[0] - house_size // 2 + (col * (house_size + house_margin)),
-                        estate_position[1] - house_size // 2 + (row * (house_size + house_margin)),
+                        estate_position[0]
+                        - house_size // 2
+                        + (col * (house_size + house_margin)),
+                        estate_position[1]
+                        - house_size // 2
+                        + (row * (house_size + house_margin)),
                         house_size,
                         house_size,
                     )
