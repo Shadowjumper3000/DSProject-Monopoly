@@ -10,7 +10,7 @@ from card_management import (
     create_chance_deck,
     create_community_chest_deck,
 )
-from utils import wrap_text
+from utils import wrap_text, quick_sorts
 
 
 class Game:
@@ -154,8 +154,15 @@ class Game:
             - Average-case O(1): Same as worst-case.
         """
         player.position = self.get_estate_position_by_name("Jail")
-        player.in_jail = True
-        player.jail_turns = 0
+        if player.community_chest_cards:
+            self.display_message(
+                f"{player.name} goes to jail and uses a 'Get Out of Jail Free' card"
+            )
+            player.community_chest_cards.pop()
+            self.get_out_of_jail(player)
+        else:
+            player.in_jail = True
+            player.jail_turns = 0
 
     def get_out_of_jail(self, player):
         """Releases the player from jail and resets their jail turn counter.
@@ -228,7 +235,7 @@ class Game:
         line_height = 30
 
         # Clear the entire right side of the board
-        pygame.draw.rect(self.screen, (255, 255, 255), (info_x - 20, 0, 280, 700))
+        pygame.draw.rect(self.screen, (255, 255, 255), (info_x - 20, 0, 300, 700))
 
         # Draw buttons
         self.draw_buttons()
@@ -297,7 +304,7 @@ class Game:
         """
         if not self.dice_rolled:
             dice_roll = random.randint(1, 6) + random.randint(1, 6)
-            # dice_roll = 1
+            dice_roll = 2
             print(f"Dice rolled: {dice_roll}")
             # Display the dice roll on the screen
             dice_text = self.font.render(f"Dice: {dice_roll}", True, (0, 0, 0))
@@ -532,7 +539,11 @@ class Game:
                 button_y += button_height + button_margin
 
             # Handle mortgaged properties
-            mortgaged_properties = [estate for estate in self.mortgage_popup_player.estates if estate.mortgaged]
+            mortgaged_properties = [
+                estate
+                for estate in self.mortgage_popup_player.estates
+                if estate.mortgaged
+            ]
             if mortgaged_properties:
                 button_y += button_margin  # Skip the "Mortgaged Properties" title
                 button_y += button_height
@@ -958,10 +969,14 @@ class Game:
             if not estate.mortgaged:
                 future_income_lost = estate.get_current_rent(self)  # Pass game instance
                 mortgage_value = estate.price // 2
-                efficiency_score = mortgage_value / future_income_lost if future_income_lost != 0 else 0
+                efficiency_score = (
+                    mortgage_value / future_income_lost
+                    if future_income_lost != 0
+                    else 0
+                )
                 properties.append((estate, efficiency_score))
-        properties.sort(key=lambda x: x[1], reverse=True)
-        return properties
+        sorted_properties = quick_sorts(properties, key=lambda x: x[1], reverse=True)
+        return sorted_properties
 
     def display_mortgage_popup(self, player):
         """Displays a popup with mortgage recommendations.
@@ -974,11 +989,13 @@ class Game:
         self.mortgage_popup_player = player
 
         # Increased popup size for better display
-        popup_rect = pygame.Rect(100, 100, 600, 500)  
+        popup_rect = pygame.Rect(100, 100, 600, 500)
         pygame.draw.rect(self.screen, (255, 255, 255), popup_rect)
         pygame.draw.rect(self.screen, (0, 0, 0), popup_rect, 2)
 
-        title_text = self.font.render("Mortgage Property Recommendations", True, (0, 0, 0))
+        title_text = self.font.render(
+            "Mortgage Property Recommendations", True, (0, 0, 0)
+        )
         self.screen.blit(title_text, (popup_rect.x + 20, popup_rect.y + 20))
 
         properties = self.calculate_mortgage_efficiency(player)
@@ -1073,8 +1090,8 @@ class Game:
         """Renders interactive buttons on the game interface.
 
         Runtime Complexity:
-            - Worst-case O(B): Where B is the number of buttons.
-            - Average-case O(B): Same as worst-case.
+            - Worst-case O(N): Where N is the number of buttons.
+            - Average-case O(N): Same as worst-case.
         """
         for button in self.buttons:
             color = (0, 0, 0) if button["enabled"] else (128, 128, 128)
@@ -1143,8 +1160,12 @@ class Game:
                     row = i // 2
                     col = i % 2
                     house_rect = pygame.Rect(
-                        estate_position[0] - house_size // 2 + (col * (house_size + house_margin)),
-                        estate_position[1] - house_size // 2 + (row * (house_size + house_margin)),
+                        estate_position[0]
+                        - house_size // 2
+                        + (col * (house_size + house_margin)),
+                        estate_position[1]
+                        - house_size // 2
+                        + (row * (house_size + house_margin)),
                         house_size,
                         house_size,
                     )
@@ -1220,8 +1241,8 @@ class Game:
         """Starts the game loop, handling setups and main gameplay.
 
         Runtime Complexity:
-            - Worst-case O(T): Where T is the number of game ticks/events processed.
-            - Average-case O(T): Depends on user interaction and game duration.
+            - Worst-case O(N): Where N is the number of game ticks/events processed.
+            - Average-case O(N): Depends on user interaction and game duration.
         """
         while self.running:
             if self.setup_phase:
@@ -1247,7 +1268,7 @@ class Game:
         """Applies the effect of a drawn card to the player.
 
         Runtime Complexity:
-            - Worst-case O(E): May involve moving the player or modifying properties.
+            - Worst-case O(N): May involve moving the player or modifying properties. Where N is the number of estates to search through.
             - Average-case O(1): Most effects are simple state changes.
         """
         print(f"Applying effect of card: {card.description}")
@@ -1256,12 +1277,22 @@ class Game:
             print(f"{player.name} got a Get Out of Jail Free card")
         if card.move_to:
             match card.move_to:
-                case "nearest_utility":
+                case "nearest Utility":
                     self.move_to_nearest_utility(player)
-                case "nearest_railroad":
+                case "nearest Railroad":
                     self.move_to_nearest_railroad(player)
                 case "Jail":
                     self.go_to_jail(player)
+                case "Go":
+                    self.move_player_to(player, 0)
+                case "Bond Street":
+                    self.move_player_to(player, 11)
+                case "Illinois Avenue":
+                    self.move_player_to(player, 24)
+                case "Vine Street":
+                    self.move_player_to(player, 39)
+                case "Kings Cross Station":
+                    self.move_player_to(player, 5)
                 case _:
                     self.move_player_to(player, card.move_to)
         if card.value:

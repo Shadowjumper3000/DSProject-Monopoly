@@ -67,7 +67,7 @@ class Queue:
         if self.is_empty():
             raise IndexError("Peek from empty queue")
         return self.items.head.data
-    
+
     # Displays the current elements of the queue
     def display(self):
         return self.items.display()
@@ -99,3 +99,27 @@ def wrap_text(text, font, max_width):
 
     lines.append(" ".join(current_line))
     return lines
+
+
+def quick_sorts(arr, key=lambda x: x, reverse=False):
+    """
+    Sorts an array using the quick sort algorithm.
+
+    Args:
+        arr (list): The array to be sorted.
+        key (function): A function that serves as a key for the sort comparison.
+        reverse (bool): If True, the list elements are sorted as if each comparison were reversed.
+
+    Returns:
+        list: The sorted array.
+    """
+    if len(arr) <= 1:
+        return arr
+    pivot = key(arr[len(arr) // 2])
+    left = [x for x in arr if key(x) < pivot]
+    middle = [x for x in arr if key(x) == pivot]
+    right = [x for x in arr if key(x) > pivot]
+    if reverse:
+        return quick_sorts(right, key, reverse) + middle + quick_sorts(left, key, reverse)
+    else:
+        return quick_sorts(left, key, reverse) + middle + quick_sorts(right, key, reverse)
